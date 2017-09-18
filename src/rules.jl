@@ -141,3 +141,29 @@
 #
 # besselh
 # besselhx
+
+###########
+# NaNMath #
+###########
+
+# unary #
+#-------#
+
+@define_diffrule NaNMath.sqrt(x)   = :(  inv(2 * NaNMath.sqrt($x))                  )
+@define_diffrule NaNMath.sin(x)    = :(  NaNMath.cos($x)                            )
+@define_diffrule NaNMath.cos(x)    = :( -NaNMath.sin($x)                            )
+@define_diffrule NaNMath.tan(x)    = :(  1 + NaNMath.pow(NaNMath.tan($x), 2)        )
+@define_diffrule NaNMath.asin(x)   = :(  inv(NaNMath.sqrt(1 - NaNMath.pow($x, 2)))  )
+@define_diffrule NaNMath.acos(x)   = :(  -inv(NaNMath.sqrt(1 - NaNMath.pow($x, 2))) )
+@define_diffrule NaNMath.acosh(x)  = :(  inv(NaNMath.sqrt(NaNMath.pow($x, 2) - 1))  )
+@define_diffrule NaNMath.atanh(x)  = :(  inv(1 - NaNMath.pow($x, 2))                )
+@define_diffrule NaNMath.log(x)    = :(  inv($x)                                    )
+@define_diffrule NaNMath.log2(x)   = :(  inv($x) / NaNMath.log(2)                   )
+@define_diffrule NaNMath.log10(x)  = :(  inv($x) / NaNMath.log(10)                  )
+@define_diffrule NaNMath.log1p(x)  = :(  inv($x + 1)                                )
+@define_diffrule NaNMath.lgamma(x) = :(  digamma($x)                                )
+
+# binary #
+#--------#
+
+@define_diffrule NaNMath.pow(x, y) = :( $y * NaNMath.pow($x, ($y - 1)) ), :( NaNMath.pow($x, $y) * NaNMath.log($x) )
