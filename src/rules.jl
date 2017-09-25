@@ -65,7 +65,7 @@
 @define_diffrule Base.:+(x, y) = :( 1                  ), :(  1                 )
 @define_diffrule Base.:-(x, y) = :( 1                  ), :( -1                 )
 @define_diffrule Base.:*(x, y) = :( $y                 ), :(  $x                )
-@define_diffrule Base.:/(x, y) = :( inv($y)            ), :( -($x / $y / $y)    )
+@define_diffrule Base.:/(x, y) = :( 1/($y)             ), :( -($x / $y / $y)    )
 @define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :(  ($x^$y) * log($x) )
 
 @define_diffrule Base.atan2(x, y) = :( $y / ($x^2 + $y^2)                                      ), :( -$x / ($x^2 + $y^2)                                                     )
