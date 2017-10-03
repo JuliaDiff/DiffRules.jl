@@ -37,7 +37,7 @@ macro define_diffrule(def)
     @assert isa(quoted_f, Expr) && quoted_f.head == :quote
     f = first(quoted_f.args)
     args = rhs.args[2:end]
-    rhs.args[1] = :(::Type{DiffRule{$(Expr(:quote, M)),$(Expr(:quote, f))}})
+    rhs.args[1] = :(::Type{$DiffRules.DiffRule{$(Expr(:quote, M)),$(Expr(:quote, f))}})
     key = (M, f, length(args))
     in(DEFINED_DIFFRULES, key) || push!(DEFINED_DIFFRULES, key)
     return esc(def)
