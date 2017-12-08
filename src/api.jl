@@ -1,8 +1,5 @@
-const DEFINED_DIFFRULES = Tuple{Symbol,Symbol,Int}[]
 
-struct DiffRule{M,f} end
-
-(::Type{DiffRule{M,f}})(args...) where {M,f} = error("no derivative rule defined for $(M).$(f) with arguments $args")
+const DEFINED_DIFFRULES = Dict{Tuple{Union{Expr,Symbol},Symbol,Int},Any}()
 
 """
     @define_diffrule M.f(x) = :(df_dx(\$x))
@@ -10,7 +7,7 @@ struct DiffRule{M,f} end
     ⋮
 
 Define a new differentiation rule for the function `M.f` and the given arguments, which should
-be treated as bindings to Julia expressions.
+be treated as bindings to Julia expressions. Return the defined rule's key.
 
 The LHS should be a function call with a non-splatted argument list, and the RHS should be
 the derivative expression, or in the `n`-ary case, an `n`-tuple of expressions where the
@@ -33,17 +30,19 @@ macro define_diffrule(def)
     @assert isa(lhs, Expr) && lhs.head == :call "LHS is not a function call"
     qualified_f = lhs.args[1]
     @assert isa(qualified_f, Expr) && qualified_f.head == :(.) "Function is not qualified by module"
-    M, quoted_f = qualified_f.args
-    f = _get_quoted_symbol(quoted_f)
+    M = qualified_f.args[1]
+    f = _get_quoted_symbol(qualified_f.args[2])
     args = lhs.args[2:end]
-    lhs.args[1] = :(::Type{$DiffRules.DiffRule{$(Expr(:quote, M)),$(Expr(:quote, f))}})
-    key = (M, f, length(args))
-    in(DEFINED_DIFFRULES, key) || push!(DEFINED_DIFFRULES, key)
-    return esc(def)
+    rule = Expr(:->, Expr(:tuple, args...), rhs)
+    key = Expr(:tuple, Expr(:quote, M), Expr(:quote, f), length(args))
+    return esc(quote
+        $DiffRules.DEFINED_DIFFRULES[$key] = $rule
+        $key
+    end)
 end
 
 """
-    diffrule(M::Symbol, f::Symbol, args...)
+    diffrule(M::Union{Expr,Symbol}, f::Symbol, args...)
 
 Return the derivative expression for `M.f` at the given argument(s), with the argument(s)
 interpolated into the returned expression.
@@ -65,10 +64,10 @@ Examples:
     julia> DiffResults.diffrule(:Base, :^, :(x + 2), :c)
     (:(c * (x + 2) ^ (c - 1)), :((x + 2) ^ c * log(x + 2)))
 """
-diffrule(M::Symbol, f::Symbol, args...) = DiffRule{M,f}(args...)
+diffrule(M::Union{Expr,Symbol}, f::Symbol, args...) = DEFINED_DIFFRULES[M,f,length(args)](args...)
 
 """
-    hasdiffrule(M::Symbol, f::Symbol, arity::Int)
+    hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int)
 
 Return `true` if a differentiation rule is defined for `M.f` and `arity`, or return `false`
 otherwise.
@@ -92,7 +91,7 @@ Examples:
     julia> DiffResults.hasdiffrule(:Base, :-, 3)
     false
 """
-hasdiffrule(M::Symbol, f::Symbol, arity::Int) = in((M, f, arity), DEFINED_DIFFRULES)
+hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_DIFFRULES, (M, f, arity))
 
 """
     diffrules()
@@ -105,15 +104,15 @@ Here, `arity` refers to the number of arguments accepted by `f`.
 
 Examples:
 
-    julia> first(diffrules())
-    true
+    julia> first(DiffRules.diffrules())
+    (:Base, :asind, 1)
 
 """
-diffrules() = DEFINED_DIFFRULES
+diffrules() = keys(DEFINED_DIFFRULES)
 
-#For v0.6 and v0.7 compatibility, need to support having the diff rule function enter as a
-#`Expr(:quote...)` and a `QuoteNode`. When v0.6 support is dropped, the function will always enter
-#in a `QuoteNode` (#23885).
+# For v0.6 and v0.7 compatibility, need to support having the diff rule function enter as a
+# `Expr(:quote...)` and a `QuoteNode`. When v0.6 support is dropped, the function will
+# always enter in a `QuoteNode` (#23885).
 function _get_quoted_symbol(ex::Expr)
     @assert ex.head == :quote
     @assert length(ex.args) == 1 && isa(ex.args[1], Symbol) "Function not a single symbol"
