@@ -72,6 +72,7 @@
 @define_diffrule Base.hypot(x, y) = :( $x / hypot($x, $y)                                      ), :(  $y / hypot($x, $y)                                                     )
 @define_diffrule Base.mod(x, y)   = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -floor(z)), NaN)) )
 @define_diffrule Base.rem(x, y)   = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -trunc(z)), NaN)) )
+@define_diffrule Base.rem2pi(x, r) = :(1), :NaN
 
 ####################
 # SpecialFunctions #
