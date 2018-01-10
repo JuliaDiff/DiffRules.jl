@@ -59,6 +59,7 @@
 @define_diffrule Base.gamma(x)                = :(  digamma($x) * gamma($x)            )
 @define_diffrule Base.lgamma(x)               = :(  digamma($x)                        )
 @define_diffrule Base.Math.JuliaLibm.log1p(x) = :(  inv($x + 1)                        )
+@define_diffrule Base.transpose(x)            = :(  1                                  )
 
 # binary #
 #--------#
@@ -67,6 +68,7 @@
 @define_diffrule Base.:-(x, y) = :( 1                  ), :( -1                 )
 @define_diffrule Base.:*(x, y) = :( $y                 ), :(  $x                )
 @define_diffrule Base.:/(x, y) = :( inv($y)            ), :( -($x / $y / $y)    )
+@define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( inv($x)            )
 @define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :(  ($x^$y) * log($x) )
 
 @define_diffrule Base.atan2(x, y) = :( $y / ($x^2 + $y^2)                                      ), :( -$x / ($x^2 + $y^2)                                                     )
