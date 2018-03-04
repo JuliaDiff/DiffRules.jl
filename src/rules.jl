@@ -60,7 +60,7 @@
 @define_diffrule Base.lgamma(x)               = :(  digamma($x)                        )
 @define_diffrule Base.Math.JuliaLibm.log1p(x) = :(  inv($x + 1)                        )
 @define_diffrule Base.transpose(x)            = :(  1                                  )
-@define_diffrule Base.abs(x)                  = :( $x > 0 ? one($x) : -one($x)         )
+@define_diffrule Base.abs(x)                  = :( signbit($x) ? -one($x) : one($x)    )
 
 # binary #
 #--------#
