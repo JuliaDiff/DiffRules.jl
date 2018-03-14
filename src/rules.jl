@@ -60,6 +60,7 @@
 @define_diffrule Base.lgamma(x)               = :(  digamma($x)                        )
 @define_diffrule Base.Math.JuliaLibm.log1p(x) = :(  inv($x + 1)                        )
 @define_diffrule Base.transpose(x)            = :(  1                                  )
+@define_diffrule Base.abs(x)                  = :( signbit($x) ? -one($x) : one($x)    )
 
 # binary #
 #--------#
@@ -76,6 +77,8 @@
 @define_diffrule Base.mod(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -floor(z)), NaN)) )
 @define_diffrule Base.rem(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -trunc(z)), NaN)) )
 @define_diffrule Base.rem2pi(x, r) = :( 1                                                       ), :NaN
+@define_diffrule Base.max(x, y)    = :( $x > $y ? one($x) : zero($x)                            ), :( $x > $y ? zero($y) : one($y)                                            )
+@define_diffrule Base.min(x, y)    = :( $x > $y ? zero($x) : one($x)                            ), :( $x > $y ? one($y) : zero($y)                                            )
 
 ####################
 # SpecialFunctions #
