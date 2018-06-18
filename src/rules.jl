@@ -56,8 +56,13 @@
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
 @define_diffrule Base.deg2rad(x)              = :(  π / 180                            )
 @define_diffrule Base.rad2deg(x)              = :(  180 / π                            )
-@define_diffrule Base.gamma(x)                = :(  digamma($x) * gamma($x)            )
-@define_diffrule Base.lgamma(x)               = :(  digamma($x)                        )
+if VERSION < v"0.7-"
+    @define_diffrule Base.gamma(x)            = :(  digamma($x) * gamma($x)            )
+    @define_diffrule Base.lgamma(x)           = :(  digamma($x)                        )
+else
+    @define_diffrule SpecialFunctions.gamma(x) = :(  digamma($x) * gamma($x)           )
+    @define_diffrule SpecialFunctions.lgamma(x) = :(  digamma($x)                      )
+end
 @define_diffrule Base.Math.JuliaLibm.log1p(x) = :(  inv($x + 1)                        )
 @define_diffrule Base.transpose(x)            = :(  1                                  )
 @define_diffrule Base.abs(x)                  = :( signbit($x) ? -one($x) : one($x)    )
