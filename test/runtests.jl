@@ -1,8 +1,14 @@
-using Base.Test
+if VERSION < v"0.7-"
+    using Base.Test
+    srand(1)
+else
+    using Test
+    import Random
+    Random.srand(1)
+end
 using SpecialFunctions, NaNMath
 using DiffRules
 
-srand(1)
 
 function finitediff(f, x)
     ϵ = cbrt(eps(typeof(x))) * max(one(typeof(x)), abs(x))
