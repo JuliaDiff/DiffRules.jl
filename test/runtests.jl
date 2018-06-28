@@ -6,7 +6,7 @@ else
     import Random
     Random.srand(1)
 end
-using SpecialFunctions, NaNMath
+import SpecialFunctions, NaNMath
 using DiffRules
 
 

@@ -61,8 +61,10 @@ if VERSION < v"0.7-"
     @define_diffrule Base.lgamma(x)           = :(  digamma($x)                        )
     @define_diffrule Base.Math.JuliaLibm.log1p(x) = :(  inv($x + 1)                    )
 else
-    @define_diffrule SpecialFunctions.gamma(x) = :(  digamma($x) * gamma($x)           )
-    @define_diffrule SpecialFunctions.lgamma(x) = :(  digamma($x)                      )
+    @define_diffrule SpecialFunctions.gamma(x) =
+        :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
+    @define_diffrule SpecialFunctions.lgamma(x) =
+        :(  SpecialFunctions.digamma($x)  )
 end
 @define_diffrule Base.transpose(x)            = :(  1                                  )
 @define_diffrule Base.abs(x)                  = :( signbit($x) ? -one($x) : one($x)    )
@@ -97,23 +99,38 @@ end
 #-------#
 
 @define_diffrule SpecialFunctions.erf(x)         = :(  (2 / sqrt(π)) * exp(-$x * $x)       )
-@define_diffrule SpecialFunctions.erfinv(x)      = :(  (sqrt(π) / 2) * exp(erfinv($x)^2)   )
+@define_diffrule SpecialFunctions.erfinv(x)      =
+    :(  (sqrt(π) / 2) * exp(SpecialFunctions.erfinv($x)^2)  )
 @define_diffrule SpecialFunctions.erfc(x)        = :( -(2 / sqrt(π)) * exp(-$x * $x)       )
-@define_diffrule SpecialFunctions.erfcinv(x)     = :( -(sqrt(π) / 2) * exp(erfcinv($x)^2)  )
+@define_diffrule SpecialFunctions.erfcinv(x)     =
+    :( -(sqrt(π) / 2) * exp(SpecialFunctions.erfcinv($x)^2)  )
 @define_diffrule SpecialFunctions.erfi(x)        = :(  (2 / sqrt(π)) * exp($x * $x)        )
-@define_diffrule SpecialFunctions.erfcx(x)       = :(  (2 * x * erfcx($x)) - (2 / sqrt(π)) )
-@define_diffrule SpecialFunctions.dawson(x)      = :(  1 - (2 * x * dawson($x))            )
-@define_diffrule SpecialFunctions.digamma(x)     = :(  trigamma($x)                        )
-@define_diffrule SpecialFunctions.invdigamma(x)  = :(  inv(trigamma(invdigamma($x)))       )
-@define_diffrule SpecialFunctions.trigamma(x)    = :(  polygamma(2, $x)                    )
-@define_diffrule SpecialFunctions.airyai(x)      = :(  airyaiprime($x)                     )
-@define_diffrule SpecialFunctions.airyaiprime(x) = :(  $x * airyai($x)                     )
-@define_diffrule SpecialFunctions.airybi(x)      = :(  airybiprime($x)                     )
-@define_diffrule SpecialFunctions.airybiprime(x) = :(  $x * airybi($x)                     )
-@define_diffrule SpecialFunctions.besselj0(x)    = :( -besselj1($x)                        )
-@define_diffrule SpecialFunctions.besselj1(x)    = :(  (besselj0($x) - besselj(2, $x)) / 2 )
-@define_diffrule SpecialFunctions.bessely0(x)    = :( -bessely1($x)                        )
-@define_diffrule SpecialFunctions.bessely1(x)    = :(  (bessely0($x) - bessely(2, $x)) / 2 )
+@define_diffrule SpecialFunctions.erfcx(x)       =
+    :(  (2 * x * SpecialFunctions.erfcx($x)) - (2 / sqrt(π))  )
+@define_diffrule SpecialFunctions.dawson(x)      =
+    :(  1 - (2 * x * SpecialFunctions.dawson($x))  )
+@define_diffrule SpecialFunctions.digamma(x) =
+    :(  SpecialFunctions.trigamma($x)  )
+@define_diffrule SpecialFunctions.invdigamma(x)  =
+    :(  inv(SpecialFunctions.trigamma(SpecialFunctions.invdigamma($x)))  )
+@define_diffrule SpecialFunctions.trigamma(x)    =
+    :(  SpecialFunctions.polygamma(2, $x)  )
+@define_diffrule SpecialFunctions.airyai(x)      =
+    :(  SpecialFunctions.airyaiprime($x)  )
+@define_diffrule SpecialFunctions.airyaiprime(x) =
+    :(  $x * SpecialFunctions.airyai($x)  )
+@define_diffrule SpecialFunctions.airybi(x)      =
+    :(  SpecialFunctions.airybiprime($x)  )
+@define_diffrule SpecialFunctions.airybiprime(x) =
+    :(  $x * SpecialFunctions.airybi($x)  )
+@define_diffrule SpecialFunctions.besselj0(x)    =
+    :( -SpecialFunctions.besselj1($x)  )
+@define_diffrule SpecialFunctions.besselj1(x)    =
+    :(  (SpecialFunctions.besselj0($x) - SpecialFunctions.besselj(2, $x)) / 2  )
+@define_diffrule SpecialFunctions.bessely0(x)    =
+    :( -SpecialFunctions.bessely1($x)  )
+@define_diffrule SpecialFunctions.bessely1(x)    =
+    :(  (SpecialFunctions.bessely0($x) - SpecialFunctions.bessely(2, $x)) / 2 )
 
 # TODO:
 #
@@ -127,15 +144,24 @@ end
 # binary #
 #--------#
 
-@define_diffrule SpecialFunctions.besselj(ν, x)   = :NaN,                                               :(  (besselj($ν - 1, $x) - besselj($ν + 1, $x)) / 2   )
-@define_diffrule SpecialFunctions.besseli(ν, x)   = :NaN,                                               :(  (besseli($ν - 1, $x) + besseli($ν + 1, $x)) / 2   )
-@define_diffrule SpecialFunctions.bessely(ν, x)   = :NaN,                                               :(  (bessely($ν - 1, $x) - bessely($ν + 1, $x)) / 2   )
-@define_diffrule SpecialFunctions.besselk(ν, x)   = :NaN,                                               :( -(besselk($ν - 1, $x) + besselk($ν + 1, $x)) / 2   )
-@define_diffrule SpecialFunctions.hankelh1(ν, x)  = :NaN,                                               :(  (hankelh1($ν - 1, $x) - hankelh1($ν + 1, $x)) / 2 )
-@define_diffrule SpecialFunctions.hankelh2(ν, x)  = :NaN,                                               :(  (hankelh2($ν - 1, $x) - hankelh2($ν + 1, $x)) / 2 )
-@define_diffrule SpecialFunctions.polygamma(m, x) = :NaN,                                               :(  polygamma($m + 1, $x)                             )
-@define_diffrule SpecialFunctions.beta(a, b)      = :( beta($a, $b)*(digamma($a) - digamma($a + $b)) ), :(  beta($a, $b)*(digamma($b) - digamma($a + $b))     )
-@define_diffrule SpecialFunctions.lbeta(a, b)     = :( digamma($a) - digamma($a + $b)                ), :(  digamma($b) - digamma($a + $b)                    )
+@define_diffrule SpecialFunctions.besselj(ν, x)   =
+    :NaN, :(  (SpecialFunctions.besselj($ν - 1, $x) - SpecialFunctions.besselj($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.besseli(ν, x)   =
+    :NaN, :(  (SpecialFunctions.besseli($ν - 1, $x) + SpecialFunctions.besseli($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.bessely(ν, x)   =
+    :NaN, :(  (SpecialFunctions.bessely($ν - 1, $x) - SpecialFunctions.bessely($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.besselk(ν, x)   =
+    :NaN, :( -(SpecialFunctions.besselk($ν - 1, $x) + SpecialFunctions.besselk($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.hankelh1(ν, x)  =
+    :NaN, :(  (SpecialFunctions.hankelh1($ν - 1, $x) - SpecialFunctions.hankelh1($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.hankelh2(ν, x)  =
+    :NaN, :(  (SpecialFunctions.hankelh2($ν - 1, $x) - SpecialFunctions.hankelh2($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.polygamma(m, x) =
+    :NaN, :(  SpecialFunctions.polygamma($m + 1, $x)  )
+@define_diffrule SpecialFunctions.beta(a, b)      =
+    :( SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)) ), :(  SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b))     )
+@define_diffrule SpecialFunctions.lbeta(a, b)     =
+    :( SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)  ), :(  SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b)  )
 
 # TODO:
 #
@@ -177,7 +203,7 @@ end
 @define_diffrule NaNMath.log2(x)   = :(  inv($x) / NaNMath.log(2)                   )
 @define_diffrule NaNMath.log10(x)  = :(  inv($x) / NaNMath.log(10)                  )
 @define_diffrule NaNMath.log1p(x)  = :(  inv($x + 1)                                )
-@define_diffrule NaNMath.lgamma(x) = :(  digamma($x)                                )
+@define_diffrule NaNMath.lgamma(x) = :(  SpecialFunctions.digamma($x)               )
 
 # binary #
 #--------#
