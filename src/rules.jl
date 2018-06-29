@@ -30,6 +30,8 @@
 @define_diffrule Base.secd(x)                 = :(  (π / 180) * secd($x) * tand($x)    )
 @define_diffrule Base.cscd(x)                 = :( -(π / 180) * cscd($x) * cotd($x)    )
 @define_diffrule Base.cotd(x)                 = :( -(π / 180) * (1 + cotd($x)^2)       )
+@define_diffrule Base.sinpi(x)                = :(  π * cospi($x)                      )
+@define_diffrule Base.cospi(x)                = :( -π * sinpi($x)                      )
 @define_diffrule Base.asin(x)                 = :(  inv(sqrt(1 - $x^2))                )
 @define_diffrule Base.acos(x)                 = :( -inv(sqrt(1 - $x^2))                )
 @define_diffrule Base.atan(x)                 = :(  inv(1 + $x^2)                      )
