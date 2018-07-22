@@ -17,6 +17,7 @@
 @define_diffrule Base.log1p(x)                = :(  inv($x + 1)                        )
 @define_diffrule Base.exp(x)                  = :(  exp($x)                            )
 @define_diffrule Base.exp2(x)                 = :(  exp2($x) * log(2)                  )
+@define_diffrule Base.exp10(x)                = :(  exp10($x) * log(10)                )
 @define_diffrule Base.expm1(x)                = :(  exp($x)                            )
 @define_diffrule Base.sin(x)                  = :(  cos($x)                            )
 @define_diffrule Base.cos(x)                  = :( -sin($x)                            )
