@@ -4,7 +4,7 @@ if VERSION < v"0.7-"
 else
     using Test
     import Random
-    Random.srand(1)
+    Random.seed!(1)
 end
 import SpecialFunctions, NaNMath
 using DiffRules
