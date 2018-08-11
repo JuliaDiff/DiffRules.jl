@@ -1,16 +1,4 @@
-using DiffRules: DEFINED_REVERSE_RULES, arity
-
-# for (key, rule_dict) in DEFINED_REVERSE_RULES
-#     @show key, arity(key)
-#     if arity(key) == 4
-#         @show rule_dict[(1,)](:z, :z̄, :g, :h)
-#         @show rule_dict[(2,)](:z, :z̄, :g, :h)
-#     else
-#         @show rule_dict[(1,)](:z, :z̄, :g)
-#     end
-# end
-
-using DiffRules: @forward_rule, DEFINED_REVERSE_RULES, arity, diffrule
+using DiffRules: DEFINED_REVERSE_RULES, arity, diffrule
 
 non_numeric_arg_functions = [(:Base, :rem2pi, 4)]
 
@@ -36,22 +24,3 @@ for (key, rules) in DEFINED_REVERSE_RULES
         @test 1 === 0
     end
 end
-
-# if arity(rule) == 3
-#     modifier = f ∈ (:asec, :acsc, :asecd, :acscd, :acosh, :acoth) ? 1 : 0
-#     simple_rule_code = diffrule(M, f, :g)
-#     reverse_rule_code = rule[2](:x, :ẋ)
-#     @eval manual_rule = (x, ẋ)->ẋ * $simple_rule_code
-#     @eval forward_rule = (x, ẋ)->$forward_rule_code
-#     x, ẋ = rand() + modifier, randn()
-#     @test manual_rule(x, ẋ) ≈ forward_rule(x, ẋ)
-# elseif arity(rule) == 4
-#     ∂f∂x, ∂f∂y = diffrule(M, f, :x, :y)
-#     forward_rule_code = rule[2](:x, :y, :ẋ, :ẏ)
-#     @eval manual_rule = (x, y, ẋ, ẏ)->ẋ * $∂f∂x + ẏ * $∂f∂y
-#     @eval forward_rule = (x, y, ẋ, ẏ)->$forward_rule_code
-#     x, y, ẋ, ẏ = rand(), rand(), rand(), rand()
-#     manual, fwd = manual_rule(x, y, ẋ, ẏ), forward_rule(x, y, ẋ, ẏ)
-#     @test isnan(manual) && isnan(fwd) || manual ≈ fwd
-# else
-
