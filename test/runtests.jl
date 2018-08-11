@@ -22,23 +22,23 @@ for (M, f, arity) in DiffRules.diffrules()
     (M, f, arity) ∈ non_numeric_arg_functions && continue
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
-        deriv = DiffRules.diffrule(M, f, :x)
+        deriv = DiffRules.diffrule(M, f, :goo)
         modifier = in(f, (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)) ? 1 : 0
         @eval begin
-            x = rand() + $modifier
-            @test isapprox($deriv, finitediff($M.$f, x), rtol=0.05)
+            goo = rand() + $modifier
+            @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
         end
     elseif arity == 2
         @test DiffRules.hasdiffrule(M, f, 2)
-        derivs = DiffRules.diffrule(M, f, :x, :y)
+        derivs = DiffRules.diffrule(M, f, :foo, :bar)
         @eval begin
-            x, y = rand(1:10), rand()
+            foo, bar = rand(1:10), rand()
             dx, dy = $(derivs[1]), $(derivs[2])
             if !(isnan(dx))
-                @test isapprox(dx, finitediff(z -> $M.$f(z, y), float(x)), rtol=0.05)
+                @test isapprox(dx, finitediff(z -> $M.$f(z, bar), float(foo)), rtol=0.05)
             end
             if !(isnan(dy))
-                @test isapprox(dy, finitediff(z -> $M.$f(x, z), y), rtol=0.05)
+                @test isapprox(dy, finitediff(z -> $M.$f(foo, z), bar), rtol=0.05)
             end
         end
     end
