@@ -23,20 +23,15 @@ Examples:
     @define_diffrule Base.polygamma(m, x) = :NaN,       :(polygamma(\$m + 1, \$x))
 
 """
-macro define_diffrule(def)
-    @assert isa(def, Expr) && def.head == :(=) "Diff rule expression does not have a left and right side"
-    lhs = def.args[1]
-    rhs = def.args[2]
-    @assert isa(lhs, Expr) && lhs.head == :call "LHS is not a function call"
-    qualified_f = lhs.args[1]
-    @assert isa(qualified_f, Expr) && qualified_f.head == :(.) "Function is not qualified by module"
-    M = qualified_f.args[1]
-    f = _get_quoted_symbol(qualified_f.args[2])
-    args = lhs.args[2:end]
-    rule = Expr(:->, Expr(:tuple, args...), rhs)
-    key = Expr(:tuple, Expr(:quote, M), Expr(:quote, f), length(args))
+macro define_diffrule(def::Expr)
+
+    def_ = splitdef(def)
+    module_, name_ = _split_qualified_name(def_[:name])
+
+    key = Expr(:tuple, Expr(:quote, module_), Expr(:quote, name_), length(def_[:args]))
+    expr = Expr(:->, Expr(:tuple, def_[:args]...), def_[:body])
     return esc(quote
-        $DiffRules.DEFINED_DIFFRULES[$key] = $rule
+        $DiffRules.DEFINED_DIFFRULES[$key] = $expr
         $key
     end)
 end
@@ -123,3 +118,15 @@ function _get_quoted_symbol(ex::QuoteNode)
     @assert isa(ex.value, Symbol) "Function not a single symbol"
     ex.value
 end
+
+"""
+    _split_qualified_name(name::Union{Symbol, Expr})
+
+Split a function name qualified by a module into the module name and a name.
+"""
+function _split_qualified_name(name::Expr)
+    @assert name.head == Symbol(".") _sqf_error
+    return name.args[1], _get_quoted_symbol(name.args[2])
+end
+_split_qualified_name(name::Symbol) = error(_sqf_error)
+const _sqf_error = "Function is not qualified by module"
