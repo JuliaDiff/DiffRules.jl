@@ -109,9 +109,9 @@ end
     :( -(sqrt(π) / 2) * exp(SpecialFunctions.erfcinv($x)^2)  )
 @define_diffrule SpecialFunctions.erfi(x)        = :(  (2 / sqrt(π)) * exp($x * $x)        )
 @define_diffrule SpecialFunctions.erfcx(x)       =
-    :(  (2 * x * SpecialFunctions.erfcx($x)) - (2 / sqrt(π))  )
+    :(  (2 * $x * SpecialFunctions.erfcx($x)) - (2 / sqrt(π))  )
 @define_diffrule SpecialFunctions.dawson(x)      =
-    :(  1 - (2 * x * SpecialFunctions.dawson($x))  )
+    :(  1 - (2 * $x * SpecialFunctions.dawson($x))  )
 @define_diffrule SpecialFunctions.digamma(x) =
     :(  SpecialFunctions.trigamma($x)  )
 @define_diffrule SpecialFunctions.invdigamma(x)  =
