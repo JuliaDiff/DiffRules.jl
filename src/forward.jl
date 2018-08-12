@@ -7,6 +7,10 @@ const ForwardRuleKey = Tuple{SymOrExpr, Symbol, Any}
 const DEFINED_FORWARD_RULES = Dict{ForwardRuleKey, Any}()
 
 macro forward_rule(def::Expr)
+    return esc(_forward_rule(def))
+end
+
+function _forward_rule(def::Expr)
 
     # Split up function definition and assert no whereparams or kwargs.
     def_ = splitdef(def)
@@ -19,11 +23,11 @@ macro forward_rule(def::Expr)
     @assert all(arg->arg[4] === nothing, args) "At least one argument has a default value"
 
     # Construct forward rule.
-    M, f = _split_qualified_name(def_[:name])
-    signature = :(Tuple{$(getindex.(args, 2)...)})
+    M, f = QuoteNode.(_split_qualified_name(def_[:name]))
+    signature = QuoteNode(:(Tuple{$(getindex.(args, 2)...)}))
     expr = Expr(:->, Expr(:tuple, def_[:args]...), def_[:body])
 
-    return esc(:(DiffRules.add_forward_rule!(($M, $f, $signature), $expr)))
+    return :(DiffRules.add_forward_rule!(($M, $f, $signature), $expr))
 end
 
 function add_forward_rule!(key::ForwardRuleKey, body::Any)

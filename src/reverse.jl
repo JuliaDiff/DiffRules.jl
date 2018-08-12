@@ -9,7 +9,7 @@ const ReverseRuleKey = Tuple{SymOrExpr, Symbol, Any, Tuple{Vararg{Int}}}
 # (Module, Function, type-tuple, argument numbers)
 const DEFINED_REVERSE_RULES = Dict{ReverseRuleKey, Any}()
 
-macro reverse_rule(def::Expr)
+macro reverse_rule(z::SymOrExpr, z̄::SymOrExpr, def::Expr)
     def_ = splitdef(def)
     @assert def_[:whereparams] == () "where parameters not currently supported"
     @assert isempty(def_[:kwargs]) "There exists a keyword argument"
