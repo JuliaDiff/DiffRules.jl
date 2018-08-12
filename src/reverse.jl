@@ -9,10 +9,13 @@
    method, and `d[2, 3]` an expression providing the sensitivity w.r.t. the 2nd and 3rd
    arguments respectively. Clearly, not all combinations will typically be provided.
 =# 
-const ReverseRuleDict = Dict{Tuple{Vararg{Int}}, Any}
+# const ReverseRuleDict = Dict{Tuple{Vararg{Int}}, Any}
 
-# All of the defined reverse rules. Keys are of the form (Module, Function, type-tuple)
-const DEFINED_REVERSE_RULES = Dict{Tuple{SymOrExpr, Symbol, Any}, ReverseRuleDict}()
+const ReverseRuleKey = Tuple{SymOrExpr, Symbol, Any, Tuple{Vararg{Int}}}
+
+# All of the defined reverse rules. Keys are of the form:
+# (Module, Function, type-tuple, argument numbers)
+const DEFINED_REVERSE_RULES = Dict{ReverseRuleKey, Any}()
 
 # macro reverse_rule(def::Expr)
 
@@ -46,36 +49,24 @@ Adds a reverse rule for the method of function `f` in module `M` with signature 
 given by `body`, which provides sensitivities w.r.t. arguments with positions `positions` in
 the signature.
 """
-function add_reverse_rule!(
-    M::SymOrExpr,
-    f::Symbol,
-    signature::DataType,
-    positions::Tuple{Vararg{Int}},
-    body::Any,
-)
-    key = (M, f, signature)
-    if key ∉ keys(DEFINED_REVERSE_RULES)
-        DEFINED_REVERSE_RULES[key] = ReverseRuleDict()
-    end
-    DEFINED_REVERSE_RULES[key][positions] = body
+function add_reverse_rule!(key::ReverseRuleKey, body::Any)
+    DEFINED_REVERSE_RULES[key] = body
 end
 
-arity(meth::Tuple{SymOrExpr, Symbol, DataType}) = length(getfield(meth[3], :3))
+arity(key::ReverseRuleKey) = length(getfield(key[3], :3))
 
 # Create forward rules from all of the existing diff rules.
 for ((M, f, nargs), rules) in DEFINED_DIFFRULES
     if nargs == 1
         reverse_rule = (z::Symbol, z̄::Symbol, x::Symbol)->:($z̄ * $(rules(x)))
-        add_reverse_rule!(M, f, Tuple{Real, Real, Real}, (1,), reverse_rule)
+        add_reverse_rule!((M, f, Tuple{Real, Real, Real}, (1,)), reverse_rule)
     elseif nargs == 2
         ∂f∂x, ∂f∂y = rules(:x, :y)
         (∂f∂x == :NaN || ∂f∂y == :NaN) && continue
         rev_rule_1 = (z::Symbol, z̄::Symbol, x::Symbol, y::Symbol)->:(z̄ * $(rules(x, y)[1]))
         rev_rule_2 = (z::Symbol, z̄::Symbol, x::Symbol, y::Symbol)->:(z̄ * $(rules(x, y)[2]))
-        @show rev_rule_1(:z, :z̄, :g, :h)
-        @show rev_rule_2(:z, :z̄, :g, :h)
-        add_reverse_rule!(M, f, Tuple{Vararg{Real, 4}}, (1,), rev_rule_1)
-        add_reverse_rule!(M, f, Tuple{Vararg{Real, 4}}, (2,), rev_rule_2)
+        add_reverse_rule!((M, f, Tuple{Vararg{Real, 4}}, (1,)), rev_rule_1)
+        add_reverse_rule!((M, f, Tuple{Vararg{Real, 4}}, (2,)), rev_rule_2)
     else
         error("Arrghh")
     end
