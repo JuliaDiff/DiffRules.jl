@@ -1,12 +1,13 @@
 using DiffRules: DEFINED_REVERSE_RULES, arity, diffrule
 
+@testset "reverse" begin
+
 non_numeric_arg_functions = [(:Base, :rem2pi, 4)]
 
 # Check that all reverse rules agree with basic diff rules.
 for (key, rule) in DEFINED_REVERSE_RULES
     M, f = key[1], key[2]
     (M, f, arity(key)) ∈ non_numeric_arg_functions && continue
-    @show key
     if arity(key) == 3
         modifier = f ∈ (:asec, :acsc, :asecd, :acscd, :acosh, :acoth) ? 1 : 0
         @eval manual_rule = (z, z̄, g)->z̄ * $(diffrule(M, f, :g))
@@ -21,4 +22,6 @@ for (key, rule) in DEFINED_REVERSE_RULES
     else
         @test 1 === 0
     end
+end
+
 end

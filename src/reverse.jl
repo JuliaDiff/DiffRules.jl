@@ -2,55 +2,46 @@
 # output, `x₁, x₂, ...` are inputs. If sensitivity computation doesn't require one of the
 # arguments, it simply won't be used in the resulting expression.
 
-#= A particular method will potentially require a number of different reverse-mode rules.
-   Each key is a Tuple of Ints, corresponding to the positions in the signature of the
-   arguments w.r.t. which the corresponding value defines sensitivities. For example,
-   `d[1]` should return an expression for the sensitivity w.r.t. the first argument of the
-   method, and `d[2, 3]` an expression providing the sensitivity w.r.t. the 2nd and 3rd
-   arguments respectively. Clearly, not all combinations will typically be provided.
-=# 
-# const ReverseRuleDict = Dict{Tuple{Vararg{Int}}, Any}
-
+# A (<module_name>, <function_name>, <argument_signature>, <argument_numbers>)-Tuple.
 const ReverseRuleKey = Tuple{SymOrExpr, Symbol, Any, Tuple{Vararg{Int}}}
 
 # All of the defined reverse rules. Keys are of the form:
 # (Module, Function, type-tuple, argument numbers)
 const DEFINED_REVERSE_RULES = Dict{ReverseRuleKey, Any}()
 
-# macro reverse_rule(def::Expr)
+macro reverse_rule(def::Expr)
+    def_ = splitdef(def)
+    @assert def_[:whereparams] == () "where parameters not currently supported"
+    @assert isempty(def_[:kwargs]) "There exists a keyword argument"
 
-#     # Split up function definition and assert no whereparams or kwargs.
-#     def_ = splitdef(def)
-#     @assert def_[:whereparams] == () "where parameters not currently supported"
-#     @assert isempty(def_[:kwargs]) "There exists a keyword argument"
+    M, f = _split_qualified_name(def_[:name])
 
-#     # Split up the arguments and assert no is slurps or default values.
-#     args = splitarg.(def_[:args])
-#     @assert all(arg->arg[3] === false, args) "At least one argument is slurping"
-#     @assert all(arg->arg[4] === nothing, args) "At least one argument has a default value"
+    wrts, args′ = process_args(def_[:args])
+    args = splitarg.(def_[:args])
+    @assert all(arg->arg[3] === false, args) "At least one argument is slurping"
+    @assert all(arg->arg[4] === nothing, args) "At least one argument has a default value"
+    signature = :(Tuple{$(getindex.(args, 2)...)})
 
-#     # Construct forward rule.
-#     spec = _split_qualified_name(def_[:name])
-#     signature = :(Tuple{$(getindex.(args, 2)...)})
-#     expr = Expr(:->, Expr(:tuple, def_[:args]...), def_[:body])
-#     return esc(:(DiffRules.add_reverse_rule($spec, $signature, $expr)))
-# end
+    body = Expr(:->, Expr(:tuple, args′...), def_[:body])
+    return esc(:(add_reverse_rule!(($M, $f, $signature, $wrts), $body)))
+end
 
-"""
-    add_reverse_rule!(
-        M::SymOrExpr,
-        f::Symbol,
-        signature::DataType,
-        positions::Tuple{Vararg{Int}},
-        body::Tuple,
-    )
+function process_args(args::Array{Any})
+    wrts, args′ = Vector{Int}(), Vector{Any}(undef, length(args))
+    for (n, arg) in enumerate(args)
+        if arg isa Expr && arg.head == :call && arg.args[1] == :wrt
+            @assert length(arg.args) == 2
+            push!(wrts, n)
+            args′[n] = arg.args[2]
+        else
+            args′[n] = arg
+        end
+    end
+    return (wrts...,), args′
+end
 
-Adds a reverse rule for the method of function `f` in module `M` with signature `signature`
-given by `body`, which provides sensitivities w.r.t. arguments with positions `positions` in
-the signature.
-"""
-function add_reverse_rule!(key::ReverseRuleKey, body::Any)
-    DEFINED_REVERSE_RULES[key] = body
+function add_reverse_rule!(key::ReverseRuleKey, rule::Any)
+    DEFINED_REVERSE_RULES[key] = rule
 end
 
 arity(key::ReverseRuleKey) = length(getfield(key[3], :3))
