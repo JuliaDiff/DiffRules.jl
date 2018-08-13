@@ -3,7 +3,6 @@ module DiffRules
 using MacroTools
 
 const SymOrExpr = Union{Symbol, Expr}
-
 const AVM = AbstractVecOrMat
 const AM = AbstractMatrix
 
