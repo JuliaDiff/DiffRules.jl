@@ -9,21 +9,36 @@ const ReverseRuleKey = Tuple{SymOrExpr, Symbol, Any, Tuple{Vararg{Int}}}
 # (Module, Function, type-tuple, argument numbers)
 const DEFINED_REVERSE_RULES = Dict{ReverseRuleKey, Any}()
 
+"""
+    @reverse_rule z z̄ M.f(wrt(x::Real), y) = :(...)
+
+Define a new reverse-mode sensitivity for `M.f` w.r.t. the first argument. `z` is the output
+from the forward-pass, `z̄` is the reverse-mode sensitivity w.r.t. `z`.
+
+Examples:
+
+    @reverse_rule z::Real z̄ Base.cos(x::Real) = :(\$z̄̇ * sin(\$x))
+    @reverse_rule z z̄::Real Main.foo(x, y) = :(\$x + \$z - \$y * \$z̄)
+"""
 macro reverse_rule(z::SymOrExpr, z̄::SymOrExpr, def::Expr)
+    return esc(_reverse_rule(z, z̄, def))
+end
+
+function _reverse_rule(z::SymOrExpr, z̄::SymOrExpr, def::Expr)
     def_ = splitdef(def)
     @assert def_[:whereparams] == () "where parameters not currently supported"
     @assert isempty(def_[:kwargs]) "There exists a keyword argument"
 
-    M, f = _split_qualified_name(def_[:name])
+    M, f = QuoteNode.(_split_qualified_name(def_[:name]))
 
     wrts, args′ = process_args(def_[:args])
-    args = splitarg.(def_[:args])
+    args = vcat(splitarg(z), splitarg(z̄), splitarg.(args′))
     @assert all(arg->arg[3] === false, args) "At least one argument is slurping"
     @assert all(arg->arg[4] === nothing, args) "At least one argument has a default value"
-    signature = :(Tuple{$(getindex.(args, 2)...)})
+    signature = QuoteNode(:(Tuple{$(getindex.(args, 2)...)}))
 
-    body = Expr(:->, Expr(:tuple, args′...), def_[:body])
-    return esc(:(add_reverse_rule!(($M, $f, $signature, $wrts), $body)))
+    body = Expr(:->, Expr(:tuple, getfield.(args, 1)...), def_[:body])
+    return :(DiffRules.add_reverse_rule!(($M, $f, $signature, $wrts), $body))
 end
 
 function process_args(args::Array{Any})
@@ -46,7 +61,7 @@ end
 
 arity(key::ReverseRuleKey) = length(getfield(key[3], :3))
 
-# Create forward rules from all of the existing diff rules.
+# Create reverse rules from all of the existing diff rules.
 for ((M, f, nargs), rules) in DEFINED_DIFFRULES
     if nargs == 1
         reverse_rule = (z::Symbol, z̄::Symbol, x::Symbol)->:($z̄ * $(rules(x)))

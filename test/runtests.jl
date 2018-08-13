@@ -16,7 +16,7 @@ function finitediff(f, x)
 end
 
 @testset "DiffRules" begin
-    # include("rules.jl")
+    include("rules.jl")
     include("forward.jl")
-    # include("reverse.jl")
+    include("reverse.jl")
 end

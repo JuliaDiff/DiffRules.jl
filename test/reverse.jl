@@ -1,20 +1,21 @@
-using DiffRules: DEFINED_REVERSE_RULES, arity, diffrule, _reverse_rule
+using DiffRules: DEFINED_REVERSE_RULES, arity, diffrule, @reverse_rule, _reverse_rule
 
 @testset "reverse" begin
 
     # Check that various things that should fail, fail.
-    @test_throws AssertionError _reverse_rule(:(M.f(x)))
-    @test_throws AssertionError _reverse_rule(:(f(x::T) where T = :(5x)))
-    @test_throws AssertionError _reverse_rule(:(f(x::Real; y) = :(5x)))
-    @test_throws AssertionError _reverse_rule(:(f(x::Real...) = :(5x)))
-    @test_throws AssertionError _reverse_rule(:(f(x::Real=5) = :(5x)))
-    @test_throws ErrorException _reverse_rule(:(f(x::Real) = :(5x)))
+    @test_throws AssertionError _reverse_rule(:z, :z̄, :(M.f(x)))
+    @test_throws AssertionError _reverse_rule(:z, :z̄, :(M.f(x::T) where T = :(5x)))
+    @test_throws AssertionError _reverse_rule(:z, :z̄, :(M.f(x::Real; y) = :(5x)))
+    @test_throws AssertionError _reverse_rule(:z, :z̄, :(M.f(x::Real...) = :(5x)))
+    @test_throws AssertionError _reverse_rule(:z, :z̄, :(M.f(x::Real=5) = :(5x)))
+    @test_throws ErrorException _reverse_rule(:z, :z̄, :(f(x::Real) = :(5x)))
 
     # Check that a basic rule works.
     foo(x) = 5x
-    @forward_rule Main.foo(x, ẋ) = :(5($x)^2 + $ẋ)
-    @test DEFINED_FORWARD_RULES[(:Main, :foo, :(Tuple{Any, Any}))](:g, :h) == :(5g^2 + h)
-    delete!(DEFINED_FORWARD_RULES, (:Main, :foo, :(Tuple{Any, Any})))
+    @reverse_rule y ȳ::Real Main.foo(wrt(x::Int)) = :($y * $ȳ * $x)
+    key = (:Main, :foo, :(Tuple{Any, Real, Int}), (1,))
+    @test DEFINED_REVERSE_RULES[key](:g, :h, :y) == :(g * h * y)
+    delete!(DEFINED_REVERSE_RULES, key)
 
 
     non_numeric_arg_functions = [(:Base, :rem2pi, 4)]

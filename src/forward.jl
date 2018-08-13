@@ -6,6 +6,21 @@ const ForwardRuleKey = Tuple{SymOrExpr, Symbol, Any}
 # sensitivities.
 const DEFINED_FORWARD_RULES = Dict{ForwardRuleKey, Any}()
 
+"""
+    @forward_rule def
+
+Define a new forward-mode sensitivity for `M.f`. The first `N` arguments are the arguments
+to `M.f`, while the second `N` are the corresponding forwards-mode sensitivities w.r.t.
+the respective argument.
+
+NOTE: We don't currently have a mechanism for not including sensitivities w.r.t. a
+particular argument, which seems kind of important.
+
+Examples:
+
+    @forward_rule Base.cos(x::Real, ẋ::Real) = :(-\$ẋ * sin(\$x))
+    @forward_rule Main.foo(x, y, ẋ, ẏ) = :(\$x + \$ẋ - \$y * \$ẏ)
+"""
 macro forward_rule(def::Expr)
     return esc(_forward_rule(def))
 end
