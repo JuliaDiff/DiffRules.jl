@@ -3,25 +3,25 @@ using LinearAlgebra: -, tr, inv, det, logdet, transpose, adjoint, norm
 @testset "generic" begin
 
 let
-    # P = 4, Q = 3, rng = MersenneTwister(123456), N = 100
+    P = 4, Q = 3, rng = MersenneTwister(123456), N = 100
 
-    # # Utility for generating square matrices, vectors, non-square matrices and scalars.
-    # mPP, mQQ = ()->randn(rng, P, P), ()->randn(rng, Q, Q)
-    # mPQ, mQP = ()->randn(rng, P, Q), ()->randn(rng, Q, P)
-    # mPQQP = ()->randn(rng, P * Q, P * Q)
-    # v, sc = ()->randn(rng, P), ()->randn(rng)
-    # psd = ()->(A = randn(rng, P, P); transpose(A) * A + 1e-3I)
+    # Utility for generating square matrices, vectors, non-square matrices and scalars.
+    mPP, mQQ = ()->randn(rng, P, P), ()->randn(rng, Q, Q)
+    mPQ, mQP = ()->randn(rng, P, Q), ()->randn(rng, Q, P)
+    mPQQP = ()->randn(rng, P * Q, P * Q)
+    v, sc = ()->randn(rng, P), ()->randn(rng)
+    psd = ()->(A = randn(rng, P, P); transpose(A) * A + 1e-3I)
 
-    # # Test all of the unary sensitivities.
-    # @test check_errs(N, unary_ȲD(-)..., mPQ, mPQ, mPQ)
-    # @test check_errs(N, unary_ȲD(tr)..., sc, mPP, mPP)
-    # @test check_errs(N, unary_ȲD(inv)..., mPP, mPP, mPP)
-    # @test check_errs(N, unary_ȲD(det)..., sc, mPP, mPP)
-    # @test check_errs(N, unary_ȲD(logdet)..., sc, psd, psd)
-    # @test check_errs(N, unary_ȲD(transpose)..., mQP, mPQ, mPQ)
-    # @test check_errs(N, unary_ȲD(adjoint)..., mQP, mPQ, mPQ)
-    # @test check_errs(N, unary_ȲD(norm)..., sc, mPQ, mPQ)
-    # @test check_errs(N, unary_ȲD(norm)..., sc, sc, sc)
+    # Test all of the unary sensitivities.
+    @test check_errs(N, unary_ȲD(-)..., mPQ, mPQ, mPQ)
+    @test check_errs(N, unary_ȲD(tr)..., sc, mPP, mPP)
+    @test check_errs(N, unary_ȲD(inv)..., mPP, mPP, mPP)
+    @test check_errs(N, unary_ȲD(det)..., sc, mPP, mPP)
+    @test check_errs(N, unary_ȲD(logdet)..., sc, psd, psd)
+    @test check_errs(N, unary_ȲD(transpose)..., mQP, mPQ, mPQ)
+    @test check_errs(N, unary_ȲD(adjoint)..., mQP, mPQ, mPQ)
+    @test check_errs(N, unary_ȲD(norm)..., sc, mPQ, mPQ)
+    @test check_errs(N, unary_ȲD(norm)..., sc, sc, sc)
 
     # # Test all of the binary sensitivities.
     # @test check_errs(N, binary_ȲD(*, 1, mQP)..., mPP, mPQ, mPQ)
