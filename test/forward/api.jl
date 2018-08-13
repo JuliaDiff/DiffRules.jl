@@ -1,6 +1,6 @@
 using DiffRules: @forward_rule, DEFINED_FORWARD_RULES, arity, diffrule, _forward_rule
 
-@testset "forward" begin
+@testset "api" begin
 
     # Check that various things that should fail, fail.
     @test_throws AssertionError _forward_rule(:(M.f(x)))

@@ -1,14 +1,7 @@
-if VERSION < v"0.7-"
-    using Base.Test
-    srand(1)
-else
-    using Test
-    import Random
-    Random.seed!(1)
-end
-import SpecialFunctions, NaNMath
-using DiffRules
+using Test, DiffRules
+import Random, SpecialFunctions, NaNMath
 
+Random.seed!(1)
 
 function finitediff(f, x)
     ϵ = cbrt(eps(typeof(x))) * max(one(typeof(x)), abs(x))
@@ -16,7 +9,18 @@ function finitediff(f, x)
 end
 
 @testset "DiffRules" begin
-    include("rules.jl")
-    include("forward.jl")
-    include("reverse.jl")
+
+    @testset "diffrules" begin
+        include("diffrules/rules.jl")
+    end
+
+    @testset "forward" begin
+        include("forward/api.jl")
+    end
+
+    @testset "reverse" begin
+        include("reverse/api.jl")
+        include("reverse/test_util.jl")
+        include("reverse/generic.jl")
+    end
 end

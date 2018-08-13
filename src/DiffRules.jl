@@ -4,10 +4,18 @@ using MacroTools
 
 const SymOrExpr = Union{Symbol, Expr}
 
-include("api.jl")
-include("rules.jl")
+const AVM = AbstractVecOrMat
+const AM = AbstractMatrix
 
-include("forward.jl")
-include("reverse.jl")
+# Simple derivative expressions.
+include("diffrules/api.jl")
+include("diffrules/rules.jl")
+
+# Forwards-mode stuff.
+include("forward/api.jl")
+
+# Reverse-mode stuff.
+include("reverse/api.jl")
+include("reverse/generic.jl")
 
 end # module
