@@ -1,6 +1,6 @@
 import LinearAlgebra: -, tr, inv, det, logdet, transpose, adjoint, norm, kron
 
-############################# Unary sensitivities #############################
+# ############################# Unary sensitivities #############################
 
 @reverse_rule(
     Y::AbstractArray{<:Real}, Ȳ::AbstractArray{<:Real},
@@ -9,72 +9,72 @@ import LinearAlgebra: -, tr, inv, det, logdet, transpose, adjoint, norm, kron
 
 @reverse_rule(
     Y::Real, Ȳ::Real,
-    LinearAlgebra.tr(wrt(X::AM{<:Real})) = :(Diagonal(fill!(similar($X), $Ȳ)))
+    LinearAlgebra.tr(wrt(X::AbstractMatrix{<:Real})) = :(Diagonal(fill!(similar($X), $Ȳ)))
 )
 
 @reverse_rule(
-    Y::AM{<:Real}, Ȳ::AM{<:Real},
-    LinearAlgebra.inv(wrt(X::AM{<:Real})) = :(-$Y' * $Ȳ * $Y'),
-)
-
-@reverse_rule(
-    Y::Real, Ȳ::Real,
-    LinearAlgebra.det(wrt(X::AM{<:Real})) = :($Y * $Ȳ * inv($X)'),
+    Y::AbstractMatrix{<:Real}, Ȳ::AbstractMatrix{<:Real},
+    LinearAlgebra.inv(wrt(X::AbstractMatrix{<:Real})) = :(-$Y' * $Ȳ * $Y'),
 )
 
 @reverse_rule(
     Y::Real, Ȳ::Real,
-    LinearAlgebra.logdet(wrt(X::AM{<:Real})) = :(Ȳ * inv(X)'),
-)
-
-@reverse_rule(
-    Y::AVM{<:Real}, Ȳ::AVM{<:Real},
-    LinearAlgebra.transpose(wrt(X::AVM{<:Real})) = :(Ȳ'),
-)
-
-@reverse_rule(
-    Y::AVM{<:Real}, Ȳ::AVM{<:Real},
-    LinearAlgebra.adjoint(wrt(X::AVM{<:Real})) = :(Ȳ'),
+    LinearAlgebra.det(wrt(X::AbstractMatrix{<:Real})) = :($Y * $Ȳ * inv($X)'),
 )
 
 @reverse_rule(
     Y::Real, Ȳ::Real,
-    LinearAlgebra.norm(wrt(X::AbstractArray)) = :($Ȳ ./ $Y .* abs2.($X) ./ $X),
+    LinearAlgebra.logdet(wrt(X::AbstractMatrix{<:Real})) = :($Ȳ * inv($X)'),
+)
+
+@reverse_rule(
+    Y::AbstractVecOrMat{<:Real}, Ȳ::AbstractVecOrMat{<:Real},
+    LinearAlgebra.transpose(wrt(X::AbstractVecOrMat{<:Real})) = :($Ȳ'),
+)
+
+@reverse_rule(
+    Y::AbstractVecOrMat{<:Real}, Ȳ::AbstractVecOrMat{<:Real},
+    LinearAlgebra.adjoint(wrt(X::AbstractVecOrMat{<:Real})) = :($Ȳ'),
 )
 
 @reverse_rule(
     Y::Real, Ȳ::Real,
-    LinearAlgebra.norm(wrt(X::Real)) = :(Ȳ * sign(X)),
+    LinearAlgebra.norm(wrt(X::AbstractArray{<:Real})) = :($Ȳ ./ $Y .* abs2.($X) ./ $X),
+)
+
+@reverse_rule(
+    Y::Real, Ȳ::Real,
+    LinearAlgebra.norm(wrt(X::Real)) = :($Ȳ * sign($X)),
 )
 
 
 ############################# Binary sensitivities #############################
 
 @reverse_rule(
-    Y::AVM{<:Real}, Ȳ::AVM{<:Real},
-    LinearAlgebra.:*(wrt(A::AVM{<:Real}), B::AVM{<:Real}) = :($Ȳ * $B')
+    Y::AbstractVecOrMat{<:Real}, Ȳ::AbstractVecOrMat{<:Real},
+    LinearAlgebra.:*(wrt(A::AbstractVecOrMat{<:Real}), B::AbstractVecOrMat{<:Real}) = :($Ȳ * $B')
 )
 @reverse_rule(
-    Y::AVM{<:Real}, Ȳ::AVM{<:Real},
-    LinearAlgebra.:*(A::AVM{<:Real}, wrt(B::AVM{<:Real})) = :($A' * $Ȳ)
-)
-
-@reverse_rule(
-    Y::AVM{<:Real}, Ȳ::AVM{<:Real},
-    LinearAlgebra.:/(wrt(A::AVM{<:Real}), B::AVM{<:Real}) = :($Ȳ / $B')
-)
-@reverse_rule(
-    Y::AVM{<:Real}, Ȳ::AVM{<:Real},
-    LinearAlgebra.:/(A::AVM{<:Real}, wrt(B::AVM{<:Real})) = :(-($Y)' * ($Ȳ / $B'))
+    Y::AbstractVecOrMat{<:Real}, Ȳ::AbstractVecOrMat{<:Real},
+    LinearAlgebra.:*(A::AbstractVecOrMat{<:Real}, wrt(B::AbstractVecOrMat{<:Real})) = :($A' * $Ȳ)
 )
 
 @reverse_rule(
-    Y::AVM{<:Real}, Ȳ::AVM{<:Real},
-    LinearAlgebra.:\(wrt(A::AVM{<:Real}), B::AVM{<:Real}) = :(-($A' \ $Ȳ) * $Y')
+    Y::AbstractVecOrMat{<:Real}, Ȳ::AbstractVecOrMat{<:Real},
+    LinearAlgebra.:/(wrt(A::AbstractVecOrMat{<:Real}), B::AbstractVecOrMat{<:Real}) = :($Ȳ / $B')
 )
 @reverse_rule(
-    Y::AVM{<:Real}, Ȳ::AVM{<:Real},
-    LinearAlgebra.:\(A::AVM{<:Real}, wrt(B::AVM{<:Real})) = :($A' \ $Ȳ)
+    Y::AbstractVecOrMat{<:Real}, Ȳ::AbstractVecOrMat{<:Real},
+    LinearAlgebra.:/(A::AbstractVecOrMat{<:Real}, wrt(B::AbstractVecOrMat{<:Real})) = :(-($Y)' * ($Ȳ / $B'))
+)
+
+@reverse_rule(
+    Y::AbstractVecOrMat{<:Real}, Ȳ::AbstractVecOrMat{<:Real},
+    LinearAlgebra.:\(wrt(A::AbstractVecOrMat{<:Real}), B::AbstractVecOrMat{<:Real}) = :(-($A' \ $Ȳ) * $Y')
+)
+@reverse_rule(
+    Y::AbstractVecOrMat{<:Real}, Ȳ::AbstractVecOrMat{<:Real},
+    LinearAlgebra.:\(A::AbstractVecOrMat{<:Real}, wrt(B::AbstractVecOrMat{<:Real})) = :($A' \ $Ȳ)
 )
 
 @reverse_rule(
@@ -98,17 +98,22 @@ import LinearAlgebra: -, tr, inv, det, logdet, transpose, adjoint, norm, kron
 )
 
 @reverse_rule(
-    Y::AM{<:Real}, Ȳ::AM{<:Real},
-    LinearAlgebra.kron(wrt(A::AM{<:Real}), B::AM{<:Real}) =
+    Y::AbstractMatrix{<:Real}, Ȳ::AbstractMatrix{<:Real},
+    LinearAlgebra.kron(wrt(A::AbstractMatrix{<:Real}), B::AbstractMatrix{<:Real}) =
         :(_kron_rev_kernel_1($Y, $Ȳ, $A, $B)),
 )
 @reverse_rule(
-    Y::AM{<:Real}, Ȳ::AM{<:Real},
-    LinearAlgebra.kron(A::AM{<:Real}, wrt(B::AM{<:Real})) =
+    Y::AbstractMatrix{<:Real}, Ȳ::AbstractMatrix{<:Real},
+    LinearAlgebra.kron(A::AbstractMatrix{<:Real}, wrt(B::AbstractMatrix{<:Real})) =
         :(_kron_rev_kernel_2($Y, $Ȳ, $A, $B)),
 )
 
-function _kron_rev_kernel_1(Y::AM{<:Real}, Ȳ::AM{<:Real}, A::AM{<:Real}, B::AM{<:Real})
+function _kron_rev_kernel_1(
+    Y::AbstractMatrix{<:Real},
+    Ȳ::AbstractMatrix{<:Real},
+    A::AbstractMatrix{<:Real},
+    B::AbstractMatrix{<:Real},
+)
     Ā = similar(A)
     (I, J), (K, L), m = size(A), size(B), length(Y)
     @inbounds for j = reverse(1:J), l = reverse(1:L), i = reverse(1:I)
@@ -122,7 +127,12 @@ function _kron_rev_kernel_1(Y::AM{<:Real}, Ȳ::AM{<:Real}, A::AM{<:Real}, B::AM
     return Ā
 end
 
-function _kron_rev_kernel_2(Y::AM{<:Real}, Ȳ::AM{<:Real}, A::AM{<:Real}, B::AM{<:Real})
+function _kron_rev_kernel_2(
+    Y::AbstractMatrix{<:Real},
+    Ȳ::AbstractMatrix{<:Real},
+    A::AbstractMatrix{<:Real},
+    B::AbstractMatrix{<:Real},
+)
     B̄ = similar(B)
     (I, J), (K, L), m = size(A), size(B), length(Y)
     @inbounds for j = reverse(1:J), l = reverse(1:L), i = reverse(1:I)

@@ -55,14 +55,25 @@ function process_args(args::Array{Any})
     return (wrts...,), args′
 end
 
+add_reverse_rule!(key::Tuple, rule::Any) = add_reverse_rule!(ReverseRuleKey(key), rule)
 function add_reverse_rule!(key::ReverseRuleKey, rule::Any)
     DEFINED_REVERSE_RULES[key] = rule
 end
 
 function arity(key::ReverseRuleKey)
     typ = key[3]
-    @assert typ.head === :curly && typ.args[1] === :Tuple && all(x->x isa Symbol, typ.args)
+    @assert typ.head === :curly && typ.args[1] === :Tuple
     return length(typ.args) - 1
+end
+
+function make_named_signature(names::AbstractVector, key::ReverseRuleKey)
+    return make_named_signature(names, key[3])
+end
+function make_named_signature(names::AbstractVector, type_tuple::Expr)
+    @assert type_tuple.head === :curly &&
+            type_tuple.args[1] === :Tuple &&
+            length(type_tuple.args) - 1 === length(names)
+    return [Expr(Symbol("::"), name, type) for (name, type) in zip(names, type_tuple.args[2:end])]
 end
 
 # Create reverse rules from all of the existing diff rules.

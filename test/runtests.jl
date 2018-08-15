@@ -1,4 +1,4 @@
-using Test, DiffRules, Random
+using Test, DiffRules, Random, FDM
 import Random, SpecialFunctions, NaNMath
 
 Random.seed!(1)

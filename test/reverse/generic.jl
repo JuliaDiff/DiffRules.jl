@@ -1,4 +1,15 @@
+using LinearAlgebra
 using LinearAlgebra: -, tr, inv, det, logdet, transpose, adjoint, norm
+using DiffRules: ReverseRuleKey, DEFINED_REVERSE_RULES, make_named_signature
+
+function unary_ȲD(key::ReverseRuleKey)
+    f = @eval $(key[1]).$(key[2])
+    arg_names = vcat(gensym(), gensym(), [gensym() for _ in 1:arity(key) - 2])
+    typed_args = Expr(:tuple, make_named_signature(arg_names, key)...)
+    body = DEFINED_REVERSE_RULES[key](arg_names...)
+    return f, eval(Expr(Symbol("->"), typed_args, body))
+end
+
 
 @testset "generic" begin
 
@@ -12,15 +23,41 @@ let
     v, sc = ()->randn(rng, P), ()->randn(rng)
     psd = ()->(A = randn(rng, P, P); transpose(A) * A + 1e-3I)
 
-    # @test check_errs(N, unary_ȲD(-)..., mPQ, mPQ, mPQ)
-    # @test check_errs(N, unary_ȲD(tr)..., sc, mPP, mPP)
-    # @test check_errs(N, unary_ȲD(inv)..., mPP, mPP, mPP)
-    # @test check_errs(N, unary_ȲD(det)..., sc, mPP, mPP)
-    # @test check_errs(N, unary_ȲD(logdet)..., sc, psd, psd)
-    # @test check_errs(N, unary_ȲD(transpose)..., mQP, mPQ, mPQ)
-    # @test check_errs(N, unary_ȲD(adjoint)..., mQP, mPQ, mPQ)
-    # @test check_errs(N, unary_ȲD(norm)..., sc, mPQ, mPQ)
-    # @test check_errs(N, unary_ȲD(norm)..., sc, sc, sc)
+    # sig = :(Tuple{AbstractArray{<:Real}, AbstractArray{<:Real}, AbstractArray{<:Real}})
+    # @show unary_ȲD((:Base, :-, sig, (1,)))
+    # f, df = unary_ȲD((:Base, :-, sig, (1,)))
+    # @show f(mPP())
+    # Ȳ = mPP()
+    # @show Ȳ
+    # @show df(mPP(), Ȳ, mPP())
+
+
+    sig = :(Tuple{AbstractArray{<:Real}, AbstractArray{<:Real}, AbstractArray{<:Real}})
+    @test check_errs(N, unary_ȲD((:Base, :-, sig, (1,)))..., mPQ, mPQ, mPQ)
+
+    sig = :(Tuple{Real, Real, AbstractMatrix{<:Real}})
+    @test check_errs(N, unary_ȲD((:LinearAlgebra, :tr, sig, (1,)))..., sc, mPP, mPP)
+
+    sig = :(Tuple{AbstractMatrix{<:Real}, AbstractMatrix{<:Real}, AbstractMatrix{<:Real}})
+    @test check_errs(N, unary_ȲD((:LinearAlgebra, :inv, sig, (1,)))..., mPP, mPP, mPP)
+
+    sig = :(Tuple{Real, Real, AbstractMatrix{<:Real}})
+    @test check_errs(N, unary_ȲD((:LinearAlgebra, :det, sig, (1,)))..., sc, mPP, mPP)
+
+    sig = :(Tuple{Real, Real, AbstractMatrix{<:Real}})
+    @test check_errs(N, unary_ȲD((:LinearAlgebra, :logdet, sig, (1,)))..., sc, psd, psd)
+
+    sig = :(Tuple{AbstractVecOrMat{<:Real}, AbstractVecOrMat{<:Real}, AbstractVecOrMat{<:Real}})
+    @test check_errs(N, unary_ȲD((:LinearAlgebra, :transpose, sig, (1,)))..., mQP, mPQ, mPQ)
+
+    sig = :(Tuple{AbstractVecOrMat{<:Real}, AbstractVecOrMat{<:Real}, AbstractVecOrMat{<:Real}})
+    @test check_errs(N, unary_ȲD((:LinearAlgebra, :adjoint, sig, (1,)))..., mQP, mPQ, mPQ)
+
+    sig = :(Tuple{Real, Real, AbstractArray{<:Real}})
+    @test check_errs(N, unary_ȲD((:LinearAlgebra, :norm, sig, (1,)))..., sc, mPQ, mPQ)
+
+    sig = :(Tuple{Real, Real, Real})
+    @test check_errs(N, unary_ȲD((:LinearAlgebra, :norm, sig, (1,)))..., sc, sc, sc)
 
     # # Test all of the binary sensitivities.
     # @test check_errs(N, binary_ȲD(*, 1, mQP)..., mPP, mPQ, mPQ)
