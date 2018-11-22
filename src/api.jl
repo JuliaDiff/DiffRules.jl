@@ -52,16 +52,16 @@ is the derivative of `f` w.r.t the `i`th argument.
 
 Examples:
 
-    julia> DiffResults.diffrule(:Base, :sin, 1)
+    julia> DiffRules.diffrule(:Base, :sin, 1)
     :(cos(1))
 
-    julia> DiffResults.diffrule(:Base, :sin, :x)
+    julia> DiffRules.diffrule(:Base, :sin, :x)
     :(cos(x))
 
-    julia> DiffResults.diffrule(:Base, :sin, :(x * y^2))
+    julia> DiffRules.diffrule(:Base, :sin, :(x * y^2))
     :(cos(x * y ^ 2))
 
-    julia> DiffResults.diffrule(:Base, :^, :(x + 2), :c)
+    julia> DiffRules.diffrule(:Base, :^, :(x + 2), :c)
     (:(c * (x + 2) ^ (c - 1)), :((x + 2) ^ c * log(x + 2)))
 """
 diffrule(M::Union{Expr,Symbol}, f::Symbol, args...) = DEFINED_DIFFRULES[M,f,length(args)](args...)
@@ -76,19 +76,19 @@ Here, `arity` refers to the number of arguments accepted by `f`.
 
 Examples:
 
-    julia> DiffResults.hasdiffrule(:Base, :sin, 1)
+    julia> DiffRules.hasdiffrule(:Base, :sin, 1)
     true
 
-    julia> DiffResults.hasdiffrule(:Base, :sin, 2)
+    julia> DiffRules.hasdiffrule(:Base, :sin, 2)
     false
 
-    julia> DiffResults.hasdiffrule(:Base, :-, 1)
+    julia> DiffRules.hasdiffrule(:Base, :-, 1)
     true
 
-    julia> DiffResults.hasdiffrule(:Base, :-, 2)
+    julia> DiffRules.hasdiffrule(:Base, :-, 2)
     true
 
-    julia> DiffResults.hasdiffrule(:Base, :-, 3)
+    julia> DiffRules.hasdiffrule(:Base, :-, 3)
     false
 """
 hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_DIFFRULES, (M, f, arity))
