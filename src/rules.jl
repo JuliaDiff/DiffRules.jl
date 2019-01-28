@@ -47,7 +47,7 @@
 @define_diffrule Base.acotd(x)                = :( -180 / π / (1 + $x^2)               )
 @define_diffrule Base.sinh(x)                 = :(  cosh($x)                           )
 @define_diffrule Base.cosh(x)                 = :(  sinh($x)                           )
-@define_diffrule Base.tanh(x)                 = :(  sech($x)^2                         )
+@define_diffrule Base.tanh(x)                 = :(  1 - tanh($x)^2                     )
 @define_diffrule Base.sech(x)                 = :( -tanh($x) * sech($x)                )
 @define_diffrule Base.csch(x)                 = :( -coth($x) * csch($x)                )
 @define_diffrule Base.coth(x)                 = :( -(csch($x)^2)                       )
