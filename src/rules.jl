@@ -70,7 +70,11 @@ else
         :(  SpecialFunctions.digamma($x)  )
 end
 @define_diffrule Base.transpose(x)            = :(  1                                  )
-@define_diffrule Base.abs(x)                  = :( signbit($x) ? -one($x) : one($x)    )
+@define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
+
+# We provide this hook for special number types like `Interval`
+# that need their own special definition of `abs`.
+_abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 
 # binary #
 #--------#
