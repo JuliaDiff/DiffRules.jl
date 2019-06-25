@@ -84,7 +84,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule Base.:*(x, y) = :( $y                 ), :(  $x                )
 @define_diffrule Base.:/(x, y) = :( inv($y)            ), :( -($x / $y / $y)    )
 @define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( inv($x)            )
-@define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :(  ($x^$y) * log($x) )
+@define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :( $x > 0 ? ($x^$y) * log($x) : NaN )
 
 if VERSION < v"0.7-"
     @define_diffrule Base.atan2(x, y)   = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
