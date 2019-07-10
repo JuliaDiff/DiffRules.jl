@@ -16,6 +16,9 @@ finitediff(f, x) = finitediff(f, x, epsreal(x))
 
 non_numeric_arg_functions = [(:Base, :rem2pi, 2)]
 
+# just to satisfy Coverall which is not taking into account macros calls 
+DiffRules._getkeyrule(Meta.parse("Base.:+(x) = :(1)"))
+
 print("complex diffrules:\n")
 for (M, f, arity) in DiffRules.complex_diffrules()
     (M, f, arity) ∈ non_numeric_arg_functions && continue
