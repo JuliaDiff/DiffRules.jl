@@ -69,7 +69,7 @@
 if VERSION < v"0.7-"
     @define_complex_diffrule Base.gamma(x)                = :(  digamma($x) * gamma($x)            )
     @define_complex_diffrule Base.lgamma(x)               = :(  digamma($x)                        )
-    @define_complex_diffrule Base.Math.JuliaLibm.log1p(x) = :(  inv($x + 1)                        )
+    @define_diffrule Base.Math.JuliaLibm.log1p(x)         = :(  inv($x + 1)                        )
 else
     @define_complex_diffrule SpecialFunctions.gamma(x) =
         :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
