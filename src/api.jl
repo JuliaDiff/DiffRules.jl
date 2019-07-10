@@ -1,9 +1,12 @@
 
 const DEFINED_DIFFRULES = Dict{Tuple{Union{Expr,Symbol},Symbol,Int},Any}()
+const DEFINED_COMPLEX_DIFFRULES = Dict{Tuple{Union{Expr,Symbol},Symbol,Int},Any}()
 
 """
     @define_diffrule M.f(x) = :(df_dx(\$x))
     @define_diffrule M.f(x, y) = :(df_dx(\$x, \$y)), :(df_dy(\$x, \$y))
+    @define_complex_diffrule M.f(x) = :(df_dx(\$x))
+    @define_complex_diffrule M.f(x, y) = :(df_dx(\$x, \$y)), :(df_dy(\$x, \$y))
     ⋮
 
 Define a new differentiation rule for the function `M.f` and the given arguments, which should
@@ -16,14 +19,18 @@ interpolated wherever they are used on the RHS.
 
 Note that differentiation rules are purely symbolic, so no type annotations should be used.
 
+The complex version @define_complex_diffrule should be used if M.f is complex differentiable.
+If not, @define_diffrule should be used instead.
+
 Examples:
 
-    @define_diffrule Base.cos(x)          = :(-sin(\$x))
-    @define_diffrule Base.:/(x, y)        = :(inv(\$y)), :(-\$x / (\$y^2))
-    @define_diffrule Base.polygamma(m, x) = :NaN,       :(polygamma(\$m + 1, \$x))
+    @define_complex_diffrule Base.cos(x)          = :(-sin(\$x))
+    @define_complex_diffrule Base.:/(x, y)        = :(inv(\$y)), :(-\$x / (\$y^2))
+    @define_diffrule         Base.polygamma(m, x) = :NaN,        :(polygamma(\$m + 1, \$x))
 
 """
-macro define_diffrule(def)
+
+function _getkeyrule(def)
     @assert isa(def, Expr) && def.head == :(=) "Diff rule expression does not have a left and right side"
     lhs = def.args[1]
     rhs = def.args[2]
@@ -35,6 +42,20 @@ macro define_diffrule(def)
     args = lhs.args[2:end]
     rule = Expr(:->, Expr(:tuple, args...), rhs)
     key = Expr(:tuple, Expr(:quote, M), Expr(:quote, f), length(args))
+    return key,rule
+end
+
+macro define_complex_diffrule(def)
+    key,rule = _getkeyrule(def)
+    return esc(quote
+        $DiffRules.DEFINED_DIFFRULES[$key] = $rule
+        $DiffRules.DEFINED_COMPLEX_DIFFRULES[$key] = $rule
+        $key
+    end)
+end
+
+macro define_diffrule(def)
+    key,rule = _getkeyrule(def)
     return esc(quote
         $DiffRules.DEFINED_DIFFRULES[$key] = $rule
         $key
@@ -43,6 +64,7 @@ end
 
 """
     diffrule(M::Union{Expr,Symbol}, f::Symbol, args...)
+    complex_diffrule(M::Union{Expr,Symbol}, f::Symbol, args...)
 
 Return the derivative expression for `M.f` at the given argument(s), with the argument(s)
 interpolated into the returned expression.
@@ -65,9 +87,11 @@ Examples:
     (:(c * (x + 2) ^ (c - 1)), :((x + 2) ^ c * log(x + 2)))
 """
 diffrule(M::Union{Expr,Symbol}, f::Symbol, args...) = DEFINED_DIFFRULES[M,f,length(args)](args...)
+complex_diffrule(M::Union{Expr,Symbol}, f::Symbol, args...) = DEFINED_COMPLEX_DIFFRULES[M,f,length(args)](args...)
 
 """
     hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int)
+    hascomplex_diffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int)
 
 Return `true` if a differentiation rule is defined for `M.f` and `arity`, or return `false`
 otherwise.
@@ -92,6 +116,7 @@ Examples:
     false
 """
 hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_DIFFRULES, (M, f, arity))
+hascomplex_diffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_COMPLEX_DIFFRULES, (M, f, arity))
 
 """
     diffrules()
@@ -109,6 +134,7 @@ Examples:
 
 """
 diffrules() = keys(DEFINED_DIFFRULES)
+complex_diffrules() = keys(DEFINED_COMPLEX_DIFFRULES)
 
 # For v0.6 and v0.7 compatibility, need to support having the diff rule function enter as a
 # `Expr(:quote...)` and a `QuoteNode`. When v0.6 support is dropped, the function will
