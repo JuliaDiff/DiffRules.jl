@@ -40,13 +40,21 @@ for (M, f, arity) in DiffRules.complex_diffrules()
                 $M.$f == Base.atan  && real(goo) == 0 && imag(goo) >=  1 && continue
                 $M.$f == Base.asec  && imag(goo) == 0 && abs(real(goo)) <= 1 && continue
                 $M.$f == Base.acsc  && imag(goo) == 0 && abs(real(goo)) <= 1 && continue
-                $M.$f == Base.acot  && real(goo) == 0 && abs(imag(goo)) >= 1 &&continue
+                $M.$f == Base.acot  && real(goo) == 0 && abs(imag(goo)) >= 1 && continue
                 $M.$f == Base.asinh && real(goo) == 0 && abs(imag(goo)) <= 1 && continue
-                $M.$f == Base.acosh && imag(goo) == 0 && abs(real(goo)) <= 1 &&continue
+                $M.$f == Base.acosh && imag(goo) == 0 && abs(real(goo)) <= 1 && continue
                 $M.$f == Base.acoth && imag(goo) == 0 && abs(real(goo)) <= 1 && continue
+                if ($M.$f == Base.acoth && real(goo) < 0 && abs(coth(acoth(goo)) - goo) > 1e-10)
+                    println("Skipping bogous acoth function: coth(acoth($goo))  = ", coth(acoth(goo)))
+                    continue
+                end
                 $M.$f == Base.acsch && real(goo) == 0 && continue
                 $M.$f == Base.asech && imag(goo) == 0 && real(goo) < 0 && continue
                 $M.$f == Base.atanh && imag(goo) == 0 && abs(real(goo)) >= 1.0 && continue
+                if ($M.$f == Base.atanh && real(goo) < 0 && abs(tanh(atanh(goo)) - goo) > 1e-10)
+                    println("Skipping bogous atanh function: tahh(atahh($goo))  = ", tanh(atanh(goo)))
+                    continue
+                end
                 $M.$f == SpecialFunctions.bessely0 && imag(goo) == 0 && real(goo) < 0 && continue
                 $M.$f == SpecialFunctions.bessely1 && imag(goo) == 0 && real(goo) < 0 && continue
                 $M.$f == SpecialFunctions.erfc     && imag(goo) == 0 && real(goo) < 0 && continue
