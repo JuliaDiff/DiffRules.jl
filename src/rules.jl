@@ -58,6 +58,7 @@
 @define_diffrule Base.acsch(x)                = :( -inv(abs($x) * sqrt(1 + $x^2))      )
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
 @define_diffrule Base.deg2rad(x)              = :(  π / 180                            )
+@define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? NaN : 1      )
 @define_diffrule Base.rad2deg(x)              = :(  180 / π                            )
 @define_diffrule SpecialFunctions.gamma(x) =
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
