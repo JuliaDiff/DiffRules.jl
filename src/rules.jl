@@ -74,11 +74,11 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 # binary #
 #--------#
 
-@define_diffrule Base.:+(x, y) = :( 1                  ), :(  1                 )
-@define_diffrule Base.:-(x, y) = :( 1                  ), :( -1                 )
+@define_diffrule Base.:+(x, y) = :( one($x)            ), :(  one($y)           )
+@define_diffrule Base.:-(x, y) = :( one($x)            ), :( -one($y)           )
 @define_diffrule Base.:*(x, y) = :( $y                 ), :(  $x                )
-@define_diffrule Base.:/(x, y) = :( inv($y)            ), :( -($x / $y / $y)    )
-@define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( inv($x)            )
+@define_diffrule Base.:/(x, y) = :( one($x) / $y       ), :( -($x / $y / $y)    )
+@define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( one($y) / ($x)     )
 @define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :(  ($x^$y) * log($x) )
 
 if VERSION < v"0.7-"
