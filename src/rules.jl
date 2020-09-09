@@ -57,6 +57,7 @@
 @define_diffrule Base.asech(x)                = :( -inv($x * sqrt(1 - $x^2))           )
 @define_diffrule Base.acsch(x)                = :( -inv(abs($x) * sqrt(1 + $x^2))      )
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
+@define_diffrule Base.sinc(x)                 = :(  cosc($x)                           )
 @define_diffrule Base.deg2rad(x)              = :(  π / 180                            )
 @define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? NaN : 1      )
 @define_diffrule Base.rad2deg(x)              = :(  180 / π                            )
