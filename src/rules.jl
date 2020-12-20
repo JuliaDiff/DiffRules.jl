@@ -66,6 +66,9 @@
 @define_diffrule SpecialFunctions.loggamma(x) =
     :(  SpecialFunctions.digamma($x)  )
 
+@define_diffrule Base.identity(x)             = :(  1                                  )
+@define_diffrule Base.conj(x)                 = :(  1                                  )
+@define_diffrule Base.adjoint(x)              = :(  1                                  )
 @define_diffrule Base.transpose(x)            = :(  1                                  )
 @define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
 
