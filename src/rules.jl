@@ -60,10 +60,12 @@
 @define_diffrule Base.deg2rad(x)              = :(  π / 180                            )
 @define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? NaN : 1      )
 @define_diffrule Base.rad2deg(x)              = :(  180 / π                            )
+
 @define_diffrule SpecialFunctions.gamma(x) =
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
 @define_diffrule SpecialFunctions.loggamma(x) =
     :(  SpecialFunctions.digamma($x)  )
+
 @define_diffrule Base.transpose(x)            = :(  1                                  )
 @define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
 
@@ -92,6 +94,14 @@ end
 @define_diffrule Base.rem2pi(x, r) = :( 1                                                       ), :NaN
 @define_diffrule Base.max(x, y)    = :( $x > $y ? one($x) : zero($x)                            ), :( $x > $y ? zero($y) : one($y)                                            )
 @define_diffrule Base.min(x, y)    = :( $x > $y ? zero($x) : one($x)                            ), :( $x > $y ? one($y) : zero($y)                                            )
+
+# trinary #
+#---------#
+
+@define_diffrule Base.muladd(x, y, z) = :($y), :($x), :(one($z))
+@define_diffrule Base.fma(x, y, z)    = :($y), :($x), :(one($z))
+
+@define_diffrule Base.ifelse(p, x, y) = false, :($p), :(!$p)
 
 ####################
 # SpecialFunctions #
