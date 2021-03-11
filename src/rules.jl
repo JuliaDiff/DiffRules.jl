@@ -99,16 +99,36 @@ end
 
 # unary #
 #-------#
+@define_diffrule SpecialFunctions.erf(x) = quote
+    tmp = exp(-$x * $x)
+    (oftype(tmp, 2 / sqrt(π)) * tmp)
+end
 
-@define_diffrule SpecialFunctions.erf(x)         = :(  (2 / sqrt(oftype($x, π))) * exp(-$x * $x)       )
-@define_diffrule SpecialFunctions.erfinv(x)      =
-    :(  (sqrt(oftype($x, π)) / 2) * exp(SpecialFunctions.erfinv($x)^2)  )
-@define_diffrule SpecialFunctions.erfc(x)        = :( -(2 / sqrt(oftype($x, π))) * exp(-$x * $x)       )
-@define_diffrule SpecialFunctions.erfcinv(x)     =
-    :( -(sqrt(oftype($x, π)) / 2) * exp(SpecialFunctions.erfcinv($x)^2)  )
-@define_diffrule SpecialFunctions.erfi(x)        = :(  (2 / sqrt(oftype($x, π))) * exp($x * $x)        )
-@define_diffrule SpecialFunctions.erfcx(x)       =
-    :(  (2 * $x * SpecialFunctions.erfcx($x)) - (2 / sqrt(oftype($x, π)))  )
+@define_diffrule SpecialFunctions.erfinv(x) = quote
+    tmp = exp(SpecialFunctions.erfinv($x)^2)
+    (oftype(tmp, sqrt(π)) / 2) * tmp
+end
+
+@define_diffrule SpecialFunctions.erfc(x) = quote
+    tmp = exp(-$x * $x)
+    -oftype(tmp, (2 / sqrt(π))) * tmp
+end
+
+@define_diffrule SpecialFunctions.erfcinv(x) = quote
+    tmp = exp(SpecialFunctions.erfcinv($x)^2)
+    -(oftype(tmp, sqrt(π)) / 2) * tmp
+end
+
+@define_diffrule SpecialFunctions.erfi(x) = quote
+    tmp = exp($x * $x)
+    oftype(tmp, (2 / sqrt(π))) * tmp
+end
+
+@define_diffrule SpecialFunctions.erfcx(x) = quote
+    tmp = (2 * $x * SpecialFunctions.erfcx($x))
+    tmp - oftype(tmp, (2 / sqrt(π)))
+end
+
 @define_diffrule SpecialFunctions.dawson(x)      =
     :(  1 - (2 * $x * SpecialFunctions.dawson($x))  )
 @define_diffrule SpecialFunctions.digamma(x) =
