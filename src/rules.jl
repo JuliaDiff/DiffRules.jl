@@ -26,7 +26,7 @@
 @define_diffrule Base.csc(x)                  = :( -csc($x) * cot($x)                  )
 @define_diffrule Base.cot(x)                  = :( -(1 + cot($x)^2)                    )
 @define_diffrule Base.sind(x)                 = :(  π * cosd($x) / 180                 )
-@define_diffrule Base.cosd(x)                 = :( -(π * sind($x)) / 180               )
+@define_diffrule Base.cosd(x)                 = :( -(π * sind($x) / 180)               )
 @define_diffrule Base.tand(x)                 = :(  π * (1 + tand($x)^2) / 180         )
 @define_diffrule Base.secd(x)                 = :(  π * secd($x) * tand($x) / 180      )
 @define_diffrule Base.cscd(x)                 = :( -(π * cscd($x) * cotd($x) / 180)    )
