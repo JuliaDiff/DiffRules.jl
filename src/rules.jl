@@ -222,8 +222,8 @@ end
 @define_diffrule NaNMath.acosh(x)  = :(  inv(NaNMath.sqrt(NaNMath.pow($x, oftype($x, 2)) - 1))  )
 @define_diffrule NaNMath.atanh(x)  = :(  inv(1 - NaNMath.pow($x, oftype($x, 2)))                )
 @define_diffrule NaNMath.log(x)    = :(  inv($x)                                    )
-@define_diffrule NaNMath.log2(x)   = :(  inv($x) / NaNMath.log(oftype($x, oftype($x, 2)))       )
-@define_diffrule NaNMath.log10(x)  = :(  inv($x) / NaNMath.log(oftype($x, oftype($x, 10)))      )
+@define_diffrule NaNMath.log2(x)   = :(  inv($x) / NaNMath.log(oftype($x, 2))       )
+@define_diffrule NaNMath.log10(x)  = :(  inv($x) / NaNMath.log(oftype($x, 10))      )
 @define_diffrule NaNMath.log1p(x)  = :(  inv($x + 1)                                )
 @define_diffrule NaNMath.lgamma(x) = :(  SpecialFunctions.digamma($x)               )
 
