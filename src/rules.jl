@@ -12,12 +12,12 @@
 @define_diffrule Base.abs2(x)                 = :(  $x + $x                            )
 @define_diffrule Base.inv(x)                  = :( -abs2(inv($x))                      )
 @define_diffrule Base.log(x)                  = :(  inv($x)                            )
-@define_diffrule Base.log10(x)                = :(  inv($x) / log(oftype($x, 10))      )
-@define_diffrule Base.log2(x)                 = :(  inv($x) / log(oftype($x, 2))       )
+@define_diffrule Base.log10(x)                = :(  inv($x) / $(DiffRules.logten)      )
+@define_diffrule Base.log2(x)                 = :(  inv($x) / $(DiffRules.logtwo)      )
 @define_diffrule Base.log1p(x)                = :(  inv($x + 1)                        )
 @define_diffrule Base.exp(x)                  = :(  exp($x)                            )
-@define_diffrule Base.exp2(x)                 = :(  exp2($x) * log(oftype($x, 2))      )
-@define_diffrule Base.exp10(x)                = :(  exp10($x) * log(oftype($x, 10))    )
+@define_diffrule Base.exp2(x)                 = :(  exp2($x) * $(DiffRules.logtwo)     )
+@define_diffrule Base.exp10(x)                = :(  exp10($x) * $(DiffRules.logten)    )
 @define_diffrule Base.expm1(x)                = :(  exp($x)                            )
 @define_diffrule Base.sin(x)                  = :(  cos($x)                            )
 @define_diffrule Base.cos(x)                  = :( -sin($x)                            )
@@ -57,9 +57,9 @@
 @define_diffrule Base.asech(x)                = :( -inv($x * sqrt(1 - $x^2))           )
 @define_diffrule Base.acsch(x)                = :( -inv(abs($x) * sqrt(1 + $x^2))      )
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
-@define_diffrule Base.deg2rad(x)              = :(  oftype($x, π) / 180                )
+@define_diffrule Base.deg2rad(x)              = :(  oftype($x, π / 180)                )
 @define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? oftype($x, NaN) : one($x) )
-@define_diffrule Base.rad2deg(x)              = :(  180 / oftype($x, π)                )
+@define_diffrule Base.rad2deg(x)              = :(  oftype($x, 180 / π)                )
 @define_diffrule SpecialFunctions.gamma(x) =
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
 @define_diffrule SpecialFunctions.loggamma(x) =
@@ -99,35 +99,12 @@ end
 
 # unary #
 #-------#
-@define_diffrule SpecialFunctions.erf(x) = quote
-    tmp = exp(-$x * $x)
-    (oftype(tmp, 2 / sqrt(π)) * tmp)
-end
-
-@define_diffrule SpecialFunctions.erfinv(x) = quote
-    tmp = exp(SpecialFunctions.erfinv($x)^2)
-    (oftype(tmp, sqrt(π)) / 2) * tmp
-end
-
-@define_diffrule SpecialFunctions.erfc(x) = quote
-    tmp = exp(-$x * $x)
-    -oftype(tmp, (2 / sqrt(π))) * tmp
-end
-
-@define_diffrule SpecialFunctions.erfcinv(x) = quote
-    tmp = exp(SpecialFunctions.erfcinv($x)^2)
-    -(oftype(tmp, sqrt(π)) / 2) * tmp
-end
-
-@define_diffrule SpecialFunctions.erfi(x) = quote
-    tmp = exp($x * $x)
-    oftype(tmp, (2 / sqrt(π))) * tmp
-end
-
-@define_diffrule SpecialFunctions.erfcx(x) = quote
-    tmp = (2 * $x * SpecialFunctions.erfcx($x))
-    tmp - oftype(tmp, (2 / sqrt(π)))
-end
+@define_diffrule SpecialFunctions.erf(x) = :( exp(-$x * $x) * $(DiffRules.twoinvsqrtπ) )
+@define_diffrule SpecialFunctions.erfinv(x) = :( exp(SpecialFunctions.erfinv($x)^2) * $(DiffRules.halfsqrtπ) )
+@define_diffrule SpecialFunctions.erfc(x) = :( -exp(-$x * $x) * $(DiffRules.twoinvsqrtπ) )
+@define_diffrule SpecialFunctions.erfcinv(x) = :( -exp(SpecialFunctions.erfcinv($x)^2) * $(DiffRules.halfsqrtπ) )
+@define_diffrule SpecialFunctions.erfi(x) = :( exp($x * $x) / $(DiffRules.halfsqrtπ) )
+@define_diffrule SpecialFunctions.erfcx(x) = :( 2 * $x * SpecialFunctions.erfcx($x) - $(DiffRules.twoinvsqrtπ) )
 
 @define_diffrule SpecialFunctions.dawson(x)      =
     :(  1 - (2 * $x * SpecialFunctions.dawson($x))  )
