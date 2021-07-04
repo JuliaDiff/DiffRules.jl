@@ -1,6 +1,6 @@
 name = "DiffRules"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
-version = "1.0.2"
+version = "1.2.0"
 
 [deps]
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
