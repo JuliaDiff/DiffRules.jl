@@ -104,10 +104,14 @@ end
 # trinary #
 #---------#
 
+#=
+
 @define_diffrule Base.muladd(x, y, z) = :($y), :($x), :(one($z))
 @define_diffrule Base.fma(x, y, z)    = :($y), :($x), :(one($z))
 
 @define_diffrule Base.ifelse(p, x, y) = false, :($p), :(!$p)
+
+=#
 
 ####################
 # SpecialFunctions #
