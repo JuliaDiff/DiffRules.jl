@@ -61,10 +61,15 @@
 @define_diffrule Base.deg2rad(x)              = :(  π / 180                            )
 @define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? NaN : 1      )
 @define_diffrule Base.rad2deg(x)              = :(  180 / π                            )
+
 @define_diffrule SpecialFunctions.gamma(x) =
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
 @define_diffrule SpecialFunctions.loggamma(x) =
     :(  SpecialFunctions.digamma($x)  )
+
+@define_diffrule Base.identity(x)             = :(  1                                  )
+@define_diffrule Base.conj(x)                 = :(  1                                  )
+@define_diffrule Base.adjoint(x)              = :(  1                                  )
 @define_diffrule Base.transpose(x)            = :(  1                                  )
 @define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
 
@@ -88,11 +93,21 @@ else
     @define_diffrule Base.atan(x, y)    = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
 end
 @define_diffrule Base.hypot(x, y)  = :( $x / hypot($x, $y)                                      ), :(  $y / hypot($x, $y)                                                     )
+@define_diffrule Base.log(b, x)    = :( log($x) * inv(-log($b)^2 * $b)                          ), :( inv($x) / log($b)                                                       )
+
 @define_diffrule Base.mod(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -floor(z)), NaN)) )
 @define_diffrule Base.rem(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -trunc(z)), NaN)) )
 @define_diffrule Base.rem2pi(x, r) = :( 1                                                       ), :NaN
 @define_diffrule Base.max(x, y)    = :( $x > $y ? one($x) : zero($x)                            ), :( $x > $y ? zero($y) : one($y)                                            )
 @define_diffrule Base.min(x, y)    = :( $x > $y ? zero($x) : one($x)                            ), :( $x > $y ? one($y) : zero($y)                                            )
+
+# trinary #
+#---------#
+
+@define_diffrule Base.muladd(x, y, z) = :($y), :($x), :(one($z))
+@define_diffrule Base.fma(x, y, z)    = :($y), :($x), :(one($z))
+
+@define_diffrule Base.ifelse(p, x, y) = false, :($p), :(!$p)
 
 ####################
 # SpecialFunctions #
