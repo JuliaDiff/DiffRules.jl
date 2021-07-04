@@ -1,0 +1,20 @@
+name = "DiffRules"
+uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
+version = "1.0.2"
+
+[deps]
+NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+
+[compat]
+NaNMath = "0.3"
+SpecialFunctions = "0.8, 0.9, 0.10, 1.0"
+julia = "1"
+
+[extras]
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "Random"]

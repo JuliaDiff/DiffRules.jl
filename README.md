@@ -3,8 +3,8 @@
 [![Build Status](https://travis-ci.org/JuliaDiff/DiffRules.jl.svg?branch=master)](https://travis-ci.org/JuliaDiff/DiffRules.jl)
 [![Coverage Status](https://coveralls.io/repos/github/JuliaDiff/DiffRules.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaDiff/DiffRules.jl?branch=master)
 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](http://www.juliadiff.org/DiffRules.jl/stable)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](http://www.juliadiff.org/DiffRules.jl/latest)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliadiff.org/DiffRules.jl/stable)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliadiff.org/DiffRules.jl/latest)
 
 Many differentiation methods rely on the notion of "primitive" differentiation rules that
 can be composed via various formulations of the chain rule. Using DiffRules, you can define

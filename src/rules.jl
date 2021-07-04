@@ -58,17 +58,12 @@
 @define_diffrule Base.acsch(x)                = :( -inv(abs($x) * sqrt(1 + $x^2))      )
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
 @define_diffrule Base.deg2rad(x)              = :(  π / 180                            )
+@define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? NaN : 1      )
 @define_diffrule Base.rad2deg(x)              = :(  180 / π                            )
-if VERSION < v"0.7-"
-    @define_diffrule Base.gamma(x)            = :(  digamma($x) * gamma($x)            )
-    @define_diffrule Base.lgamma(x)           = :(  digamma($x)                        )
-    @define_diffrule Base.Math.JuliaLibm.log1p(x) = :(  inv($x + 1)                    )
-else
-    @define_diffrule SpecialFunctions.gamma(x) =
-        :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
-    @define_diffrule SpecialFunctions.lgamma(x) =
-        :(  SpecialFunctions.digamma($x)  )
-end
+@define_diffrule SpecialFunctions.gamma(x) =
+    :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
+@define_diffrule SpecialFunctions.loggamma(x) =
+    :(  SpecialFunctions.digamma($x)  )
 @define_diffrule Base.transpose(x)            = :(  1                                  )
 @define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
 
@@ -79,11 +74,11 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 # binary #
 #--------#
 
-@define_diffrule Base.:+(x, y) = :( 1                  ), :(  1                 )
-@define_diffrule Base.:-(x, y) = :( 1                  ), :( -1                 )
+@define_diffrule Base.:+(x, y) = :( one($x)            ), :(  one($y)           )
+@define_diffrule Base.:-(x, y) = :( one($x)            ), :( -one($y)           )
 @define_diffrule Base.:*(x, y) = :( $y                 ), :(  $x                )
-@define_diffrule Base.:/(x, y) = :( inv($y)            ), :( -($x / $y / $y)    )
-@define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( inv($x)            )
+@define_diffrule Base.:/(x, y) = :( one($x) / $y       ), :( -($x / $y / $y)    )
+@define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( one($y) / ($x)     )
 @define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :( $x > 0 ? ($x^$y) * log($x) : NaN )
 
 if VERSION < v"0.7-"
@@ -167,7 +162,7 @@ end
     :NaN, :(  SpecialFunctions.polygamma($m + 1, $x)  )
 @define_diffrule SpecialFunctions.beta(a, b)      =
     :( SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)) ), :(  SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b))     )
-@define_diffrule SpecialFunctions.lbeta(a, b)     =
+@define_diffrule SpecialFunctions.logbeta(a, b)     =
     :( SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)  ), :(  SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b)  )
 
 # TODO:

@@ -27,6 +27,11 @@ for (M, f, arity) in DiffRules.diffrules()
         @eval begin
             goo = rand() + $modifier
             @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
+            # test for 2pi functions
+            if "mod2pi" == string($M.$f)
+                goo = 4pi + $modifier
+                @test NaN === $deriv
+            end
         end
     elseif arity == 2
         @test DiffRules.hasdiffrule(M, f, 2)
