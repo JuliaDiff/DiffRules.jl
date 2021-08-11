@@ -18,9 +18,9 @@ end
 
 non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3)]
 
-for T in [Float32, Float64]
-    for (M, f, arity) in DiffRules.diffrules()
-        @testset "$M.$f $(arity)" begin
+
+@testset "$M.$f $(arity)" for (M, f, arity) in DiffRules.diffrules()
+    for T in [Float32, Float64]
             (M, f, arity) ∈ non_numeric_arg_functions && continue
             if arity == 1
                 @test DiffRules.hasdiffrule(M, f, 1)
@@ -50,26 +50,26 @@ for T in [Float32, Float64]
                         @test isapprox(dy, finitediff(z -> $M.$f(foo, z), bar), rtol=0.05)
                     end
                 end
-            end
-        end
-    elseif arity == 3
-        #=
-        @test DiffRules.hasdiffrule(M, f, 3)
-        derivs = DiffRules.diffrule(M, f, :foo, :bar, :goo)
-        @eval begin
-            foo, bar, goo = randn(3)
-            dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
-            if !(isnan(dx))
+            elseif arity == 3
+                #=
+                @test DiffRules.hasdiffrule(M, f, 3)
+                derivs = DiffRules.diffrule(M, f, :foo, :bar, :goo)
+                @eval begin
+                foo, bar, goo = randn(3)
+                dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
+                if !(isnan(dx))
                 @test isapprox(dx, finitediff(x -> $M.$f(x, bar, goo), foo), rtol=0.05)
-            end
-            if !(isnan(dy))
+                end
+                if !(isnan(dy))
                 @test isapprox(dy, finitediff(y -> $M.$f(foo, y, goo), bar), rtol=0.05)
-            end
-            if !(isnan(dz))
+                end
+                if !(isnan(dz))
                 @test isapprox(dz, finitediff(z -> $M.$f(foo, bar, z), goo), rtol=0.05)
+                end
+                end
+                =#
             end
         end
-        =#
     end
 end
 
@@ -92,12 +92,12 @@ end
 @test DiffRules.hasdiffrule(:Base, :ifelse, 3)
 derivs = DiffRules.diffrule(:Base, :ifelse, :foo, :bar, :goo)
 for cond in [true, false]
-    @eval begin
-        foo = $cond
-        bar, gee = randn(2)
-        dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
-        @test isapprox(dy, finitediff(y -> ifelse(foo, y, goo), bar), rtol=0.05)
-        @test isapprox(dz, finitediff(z -> ifelse(foo, bar, z), goo), rtol=0.05)
-    end
+@eval begin
+foo = $cond
+bar, gee = randn(2)
+dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
+@test isapprox(dy, finitediff(y -> ifelse(foo, y, goo), bar), rtol=0.05)
+@test isapprox(dz, finitediff(z -> ifelse(foo, bar, z), goo), rtol=0.05)
+end
 end
 =#
