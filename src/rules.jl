@@ -57,6 +57,7 @@
 @define_diffrule Base.asech(x)                = :( -inv($x * sqrt(1 - $x^2))           )
 @define_diffrule Base.acsch(x)                = :( -inv(abs($x) * sqrt(1 + $x^2))      )
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
+@define_diffrule Base.sinc(x)                 = :(  cosc($x)                           )
 @define_diffrule Base.deg2rad(x)              = :(  oftype($x, π / 180)                )
 @define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? oftype($x, NaN) : one($x) )
 @define_diffrule Base.rad2deg(x)              = :(  oftype($x, 180 / π)                )
@@ -64,6 +65,10 @@
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
 @define_diffrule SpecialFunctions.loggamma(x) =
     :(  SpecialFunctions.digamma($x)  )
+
+@define_diffrule Base.identity(x)             = :(  one($x)                            )
+@define_diffrule Base.conj(x)                 = :(  one($x)                            )
+@define_diffrule Base.adjoint(x)              = :(  one($x)                            )
 @define_diffrule Base.transpose(x)            = :(  one($x)                            )
 @define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
 
@@ -79,7 +84,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule Base.:*(x, y) = :( $y                 ), :(  $x                )
 @define_diffrule Base.:/(x, y) = :( one($x) / $y       ), :( -($x / $y / $y)    )
 @define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( one($y) / ($x)     )
-@define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :(  ($x^$y) * log($x) )
+@define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :( ($x isa Real && $x<=0) ? Base.oftype(float($x), NaN) : ($x^$y)*log($x) )
 
 if VERSION < v"0.7-"
     @define_diffrule Base.atan2(x, y)   = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
@@ -87,11 +92,25 @@ else
     @define_diffrule Base.atan(x, y)    = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
 end
 @define_diffrule Base.hypot(x, y)  = :( $x / hypot($x, $y)                                      ), :(  $y / hypot($x, $y)                                                     )
+@define_diffrule Base.log(b, x)    = :( log($x) * inv(-log($b)^2 * $b)                          ), :( inv($x) / log($b)                                                       )
+
 @define_diffrule Base.mod(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -floor(z)), NaN)) )
 @define_diffrule Base.rem(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -trunc(z)), NaN)) )
 @define_diffrule Base.rem2pi(x, r) = :( 1                                                       ), :NaN
 @define_diffrule Base.max(x, y)    = :( $x > $y ? one($x) : zero($x)                            ), :( $x > $y ? zero($y) : one($y)                                            )
 @define_diffrule Base.min(x, y)    = :( $x > $y ? zero($x) : one($x)                            ), :( $x > $y ? one($y) : zero($y)                                            )
+
+# trinary #
+#---------#
+
+#=
+
+@define_diffrule Base.muladd(x, y, z) = :($y), :($x), :(one($z))
+@define_diffrule Base.fma(x, y, z)    = :($y), :($x), :(one($z))
+
+@define_diffrule Base.ifelse(p, x, y) = false, :($p), :(!$p)
+
+=#
 
 ####################
 # SpecialFunctions #

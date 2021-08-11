@@ -2,13 +2,11 @@ using Documenter, DiffRules
 
 makedocs(modules=[DiffRules],
          doctest = false,
-         format = :html,
          sitename = "DiffRules",
-         pages = ["Documentation" => "index.md"])
+         pages = ["Documentation" => "index.md"],
+         format = Documenter.HTML(
+                  prettyurls = get(ENV, "CI", nothing) == "true"
+         ),
+)
 
-deploydocs(repo = "github.com/JuliaDiff/DiffRules.jl.git",
-           osname = "linux",
-           julia = "0.6",
-           target = "build",
-           deps = nothing,
-           make = nothing)
+deploydocs(repo = "github.com/JuliaDiff/DiffRules.jl")
