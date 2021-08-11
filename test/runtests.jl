@@ -21,54 +21,53 @@ non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3)]
 
 @testset "$M.$f $(arity)" for (M, f, arity) in DiffRules.diffrules()
     for T in [Float32, Float64]
-            (M, f, arity) ∈ non_numeric_arg_functions && continue
-            if arity == 1
-                @test DiffRules.hasdiffrule(M, f, 1)
-                deriv = DiffRules.diffrule(M, f, :goo)
-                modifier = in(f, (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)) ? 1 : 0
-                @eval begin
-                    goo = $T(rand() + $modifier)
-                    @test $deriv isa $T
-                    @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
-                    # test for 2pi functions
-                    if "mod2pi" == string($M.$f)
-                        goo = 4pi + $modifier
-                        @test NaN === $deriv
-                    end
+        (M, f, arity) ∈ non_numeric_arg_functions && continue
+        if arity == 1
+            @test DiffRules.hasdiffrule(M, f, 1)
+            deriv = DiffRules.diffrule(M, f, :goo)
+            modifier = in(f, (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)) ? 1 : 0
+            @eval begin
+                goo = $T(rand() + $modifier)
+                @test $deriv isa $T
+                @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
+                # test for 2pi functions
+                if "mod2pi" == string($M.$f)
+                    goo = 4pi + $modifier
+                    @test NaN === $deriv
                 end
-            elseif arity == 2
-                # TODO: Add test for types.
-                @test DiffRules.hasdiffrule(M, f, 2)
-                derivs = DiffRules.diffrule(M, f, :foo, :bar)
-                @eval begin
-                    foo, bar = rand(1:10), rand()
-                    dx, dy = $(derivs[1]), $(derivs[2])
-                    if !(isnan(dx))
-                        @test isapprox(dx, finitediff(z -> $M.$f(z, bar), float(foo)), rtol=0.05)
-                    end
-                    if !(isnan(dy))
-                        @test isapprox(dy, finitediff(z -> $M.$f(foo, z), bar), rtol=0.05)
-                    end
-                end
-            elseif arity == 3
-                #=
-                @test DiffRules.hasdiffrule(M, f, 3)
-                derivs = DiffRules.diffrule(M, f, :foo, :bar, :goo)
-                @eval begin
-                foo, bar, goo = randn(3)
-                dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
+            end
+        elseif arity == 2
+            # TODO: Add test for types.
+            @test DiffRules.hasdiffrule(M, f, 2)
+            derivs = DiffRules.diffrule(M, f, :foo, :bar)
+            @eval begin
+                foo, bar = rand(1:10), rand()
+                dx, dy = $(derivs[1]), $(derivs[2])
                 if !(isnan(dx))
-                @test isapprox(dx, finitediff(x -> $M.$f(x, bar, goo), foo), rtol=0.05)
+                    @test isapprox(dx, finitediff(z -> $M.$f(z, bar), float(foo)), rtol=0.05)
                 end
                 if !(isnan(dy))
-                @test isapprox(dy, finitediff(y -> $M.$f(foo, y, goo), bar), rtol=0.05)
+                    @test isapprox(dy, finitediff(z -> $M.$f(foo, z), bar), rtol=0.05)
                 end
-                if !(isnan(dz))
-                @test isapprox(dz, finitediff(z -> $M.$f(foo, bar, z), goo), rtol=0.05)
-                end
-                end
-                =#
             end
+        elseif arity == 3
+            #=
+            @test DiffRules.hasdiffrule(M, f, 3)
+            derivs = DiffRules.diffrule(M, f, :foo, :bar, :goo)
+            @eval begin
+            foo, bar, goo = randn(3)
+            dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
+            if !(isnan(dx))
+            @test isapprox(dx, finitediff(x -> $M.$f(x, bar, goo), foo), rtol=0.05)
+            end
+            if !(isnan(dy))
+            @test isapprox(dy, finitediff(y -> $M.$f(foo, y, goo), bar), rtol=0.05)
+            end
+            if !(isnan(dz))
+            @test isapprox(dz, finitediff(z -> $M.$f(foo, bar, z), goo), rtol=0.05)
+            end
+            end
+            =#
         end
     end
 end
