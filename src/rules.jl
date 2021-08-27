@@ -177,6 +177,7 @@ end
     :NaN, :(  (SpecialFunctions.hankelh1($ν - 1, $x) - SpecialFunctions.hankelh1($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.hankelh2(ν, x)  =
     :NaN, :(  (SpecialFunctions.hankelh2($ν - 1, $x) - SpecialFunctions.hankelh2($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.gamma(a, x) = :NaN,       :(-exp(-$x) * $x^($a - 1))
 @define_diffrule SpecialFunctions.polygamma(m, x) =
     :NaN, :(  SpecialFunctions.polygamma($m + 1, $x)  )
 @define_diffrule SpecialFunctions.beta(a, b)      =
