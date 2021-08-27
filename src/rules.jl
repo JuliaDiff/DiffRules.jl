@@ -194,7 +194,7 @@ end
 @define_diffrule SpecialFunctions.logbeta(a, b)   =
     :( SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)  ), :(  SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b)  )
 @define_diffrule SpecialFunctions.zeta(s, z)      =
-    :NaN, :( -$s * SpecialFunctions.zeta(1 + $s, z) )
+    :NaN, :( -$s * SpecialFunctions.zeta(1 + $s, $z) )
 
 # TODO:
 #
