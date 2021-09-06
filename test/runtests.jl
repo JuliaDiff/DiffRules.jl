@@ -18,8 +18,15 @@ end
 
 non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3)]
 
+recently_defined_functions = []
+if !hasmethod(SpecialFunctions.gamma, Tuple{Number, Number})
+    # 2-arg gamma added after SpecialFunctions v0.8.0
+    push!(recently_defined_functions, (:SpecialFunctions, :gamma, 2))
+end
+
 for (M, f, arity) in DiffRules.diffrules()
     (M, f, arity) ∈ non_numeric_arg_functions && continue
+    (M, f, arity) ∈ recently_defined_functions && continue
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
         deriv = DiffRules.diffrule(M, f, :goo)
