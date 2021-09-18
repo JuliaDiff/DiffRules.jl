@@ -18,6 +18,7 @@ jobs:
         os: [ubuntu-latest]
         package:
           - {user: JuliaDiff, repo: ForwardDiff.jl, group: All}
+          - {user: JuliaDiff, repo: ReverseDiff.jl, group: All}
           - {user: FluxML, repo: Tracker.jl, group: All}
           - {user: FluxML, repo: Zygote.jl, group: All}
           - {user: invenia, repo: Nabla.jl, group: All}
