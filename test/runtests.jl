@@ -89,6 +89,7 @@ for cond in (true, false)
         dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
         @test isapprox(dy, finitediff(y -> ifelse(foo, y, goo), bar), rtol=0.05)
         @test isapprox(dz, finitediff(z -> ifelse(foo, bar, z), goo), rtol=0.05)
+        @test isnan(dx)
     end
 end
 
