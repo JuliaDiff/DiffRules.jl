@@ -82,7 +82,7 @@ end
 # Test ifelse separately as first argument is boolean
 @test DiffRules.hasdiffrule(:Base, :ifelse, 3)
 derivs = DiffRules.diffrule(:Base, :ifelse, :foo, :bar, :goo)
-for cond in [true, false]
+for cond in (true, false)
     @eval begin
         foo = $cond
         bar, gee = randn(2)
