@@ -106,6 +106,8 @@ Each key is of the form `(M::Symbol, f::Symbol, arity::Int)`.
 Here, `arity` refers to the number of arguments accepted by `f` and `M` is one of the
 `modules`.
 
+The default `modules` does *not* include all rules defined by this package, but rather, exactly those packages for which `v1.0` provided rules. This is done in order not to break downstream packages, man or which assumed this list would never change. To include all rules, specify `modules = :all`.
+
 # Examples
 
 ```jldoctest
