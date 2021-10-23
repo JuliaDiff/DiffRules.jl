@@ -1,7 +1,6 @@
 using DiffRules
 using Test
 
-import Documenter
 import SpecialFunctions, NaNMath, LogExpFunctions
 import Random
 Random.seed!(1)
@@ -16,8 +15,7 @@ end
 
 non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3)]
 
-modules = (:Base, :SpecialFunctions, :NaNMath, :LogExpFunctions)
-for (M, f, arity) in DiffRules.diffrules(; modules=modules)
+for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     (M, f, arity) ∈ non_numeric_arg_functions && continue
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
@@ -96,21 +94,14 @@ end
 end
 
     @testset "diffrules" begin
-        modules = Set(first(x) for x in DiffRules.diffrules())
-        @test modules == Set((:Base, :SpecialFunctions, :NaNMath))
+        rules = @test_deprecated(DiffRules.diffrules())
+        @test Set(M for (M, _, _) in rules) == Set((:Base, :SpecialFunctions, :NaNMath))
 
-        modules = Set(first(x) for x in DiffRules.diffrules(; modules=(:Base, :LogExpFunctions)))
-        @test modules == Set((:Base, :LogExpFunctions))
-    end
+        rules = DiffRules.diffrules(; filter_modules=nothing)
+        @test Set(M for (M, _, _) in rules) == Set((:Base, :SpecialFunctions, :NaNMath, :LogExpFunctions))
 
-    @testset "doctests" begin
-        Documenter.DocMeta.setdocmeta!(
-            DiffRules,
-            :DocTestSetup,
-            :(using DiffRules, SpecialFunctions);
-            recursive=true,
-        )
-        Documenter.doctest(DiffRules)
+        rules = DiffRules.diffrules(; filter_modules=(:Base, :LogExpFunctions))
+        @test Set(M for (M, _, _) in rules) == Set((:Base, :LogExpFunctions))
     end
 end
 

@@ -95,39 +95,86 @@ false
 """
 hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_DIFFRULES, (M, f, arity))
 
+# show a deprecation warning if `filter_modules` in `diffrules()` is specified implicitly
+# we use a custom singleton to figure out if the keyword argument was set explicitly
+struct DefaultFilterModules end
+
+function deprecated_modules(modules)
+    return if modules isa DefaultFilterModules
+        Base.depwarn(
+            "the implicit keyword argument " *
+            "`filter_modules=(:Base, :SpecialFunctions, :NaNMath)` in `diffrules()` is " *
+            "deprecated and will be changed to `filter_modules=nothing` in an upcoming " *
+            "breaking release of DiffRules (i.e., `diffrules()` will return all rules " *
+            "defined in DiffRules)",
+            :diffrules,
+        )
+        (:Base, :SpecialFunctions, :NaNMath)
+    else
+        modules
+    end
+end
+
 """
-    diffrules(; modules=(:Base, :SpecialFunctions, :NaNMath))
+    diffrules(; filter_modules=(:Base, :SpecialFunctions, :NaNMath))
 
 Return a list of keys that can be used to access all defined differentiation rules for
-functions in the `modules`.
+modules in `filter_modules`.
 
 Each key is of the form `(M::Symbol, f::Symbol, arity::Int)`.
-
 Here, `arity` refers to the number of arguments accepted by `f` and `M` is one of the
-`modules`.
+modules in `filter_modules`.
 
-The default `modules` does *not* include all rules defined by this package, but rather, exactly those packages for which `v1.0` provided rules. This is done in order not to break downstream packages, man or which assumed this list would never change. To include all rules, specify `modules = :all`.
+To include all rules, specify `filter_modules = nothing`.
+
+!!! note
+    Calling `diffrules()` with the implicit default keyword argument `filter_modules`
+    does *not* return all rules defined by this package but rather only rules for the
+    packages for which DiffRules 1.0 provided rules. This is done in order to not to
+    break downstream packages that assumed this list would never change.
+    It is planned to change `diffrules()` to return all rules, i.e., to use the
+    default keyword argument `filter_modules=nothing`, in an upcoming breaking release
+    of DiffRules.
 
 # Examples
 
 ```jldoctest
-julia> modules = Set(M for (M, f, arity) in DiffRules.diffrules());
+julia> first(DiffRules.diffrules())
+(:Base, :log2, 1)
+```
 
-julia> modules == Set((:Base, :SpecialFunctions, :NaNMath))
+If you call `diffrules()`, only rules for Base, SpecialFunctions, and
+NaNMath are returned but no rules for LogExpFunctions:
+```jldoctest
+julia> any(M in :LogExpFunctions for (M, _, _) in DiffRules.diffrules())
+false
+```
+
+If you set `filter_modules=nothing`, all rules defined in DiffRules are
+returned and in particular also rules for LogExpFunctions:
+```jldoctest
+julia> any(
+           M in :LogExpFunctions
+           for (M, _, _) in DiffRules.diffrules(; filter_modules=nothing)
+       )
 true
+```
 
-julia> modules = Set(M for (M, f, arity) in DiffRules.diffrules(; modules=(:Base,)));
-
-julia> modules == Set((:Base,))
-true
-
-julia> isempty(DiffRules.diffrules(; modules=(:StatsFuns,)))
+If you set `filter_modules=(:Base,)` only rules for functions in Base are
+returned:
+```jldoctest
+julia> all(M === :Base for (M, _, _) in DiffRules.diffrules(; filter_modules=(:Base,)))
 true
 ```
 """
-function diffrules(; modules=(:Base, :SpecialFunctions, :NaNMath))
-    return Iterators.filter(keys(DEFINED_DIFFRULES)) do (M, _, _)
-        return M in modules
+function diffrules(; filter_modules=DefaultFilterModules())
+    modules = deprecated_modules(filter_modules)
+    return if modules === nothing
+        keys(DEFINED_DIFFRULES)
+    else
+        Iterators.filter(keys(DEFINED_DIFFRULES)) do (M, _, _)
+            return M in modules
+        end
     end
 end
 
