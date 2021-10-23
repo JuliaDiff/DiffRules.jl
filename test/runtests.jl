@@ -23,11 +23,13 @@ for (M, f, arity) in DiffRules.diffrules(; modules=modules)
         @test DiffRules.hasdiffrule(M, f, 1)
         deriv = DiffRules.diffrule(M, f, :goo)
         modifier = if f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)
-            1
+            1.0
         elseif f === :log1mexp
-            -1
+            -1.0
+        elseif f === :log2mexp
+            -0.5
         else
-            0
+            0.0
         end
         @eval begin
             let
