@@ -109,11 +109,18 @@ Here, `arity` refers to the number of arguments accepted by `f` and `M` is one o
 # Examples
 
 ```jldoctest
-julia> first(DiffRules.diffrules())
-(:Base, :log2, 1)
+julia> modules = Set(M for (M, f, arity) in DiffRules.diffrules());
 
-julia> first(DiffRules.diffrules(; modules=(:SpecialFunctions,)))
-(:SpecialFunctions, :erfi, 1)
+julia> modules == Set((:Base, :SpecialFunctions, :NaNMath))
+true
+
+julia> modules = Set(M for (M, f, arity) in DiffRules.diffrules(; modules=(:Base,)));
+
+julia> modules == Set((:Base,))
+true
+
+julia> isempty(DiffRules.diffrules(; modules=(:StatsFuns,)))
+true
 ```
 """
 function diffrules(; modules=(:Base, :SpecialFunctions, :NaNMath))
