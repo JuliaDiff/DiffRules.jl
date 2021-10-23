@@ -19,9 +19,9 @@ Note that differentiation rules are purely symbolic, so no type annotations shou
 # Examples
 
 ```julia
-    @define_diffrule Base.cos(x)          = :(-sin(\$x))
-    @define_diffrule Base.:/(x, y)        = :(inv(\$y)), :(-\$x / (\$y^2))
-    @define_diffrule Base.polygamma(m, x) = :NaN,       :(polygamma(\$m + 1, \$x))
+@define_diffrule Base.cos(x)          = :(-sin(\$x))
+@define_diffrule Base.:/(x, y)        = :(inv(\$y)), :(-\$x / (\$y^2))
+@define_diffrule Base.polygamma(m, x) = :NaN,       :(polygamma(\$m + 1, \$x))
 ```
 """
 macro define_diffrule(def)
@@ -54,14 +54,14 @@ is the derivative of `f` w.r.t the `i`th argument.
 # Examples
 
 ```jldoctest
-    julia> DiffRules.diffrule(:Base, :sin, 1)
-    :(cos(1))
+julia> DiffRules.diffrule(:Base, :sin, 1)
+:(cos(1))
 
-    julia> DiffRules.diffrule(:Base, :sin, :x)
-    :(cos(x))
+julia> DiffRules.diffrule(:Base, :sin, :x)
+:(cos(x))
 
-    julia> DiffRules.diffrule(:Base, :sin, :(x * y^2))
-    :(cos(x * y ^ 2))
+julia> DiffRules.diffrule(:Base, :sin, :(x * y^2))
+:(cos(x * y ^ 2))
 ```
 """
 diffrule(M::Union{Expr,Symbol}, f::Symbol, args...) = DEFINED_DIFFRULES[M,f,length(args)](args...)
@@ -77,20 +77,20 @@ Here, `arity` refers to the number of arguments accepted by `f`.
 # Examples
 
 ```jldoctest
-    julia> DiffRules.hasdiffrule(:Base, :sin, 1)
-    true
+julia> DiffRules.hasdiffrule(:Base, :sin, 1)
+true
 
-    julia> DiffRules.hasdiffrule(:Base, :sin, 2)
-    false
+julia> DiffRules.hasdiffrule(:Base, :sin, 2)
+false
 
-    julia> DiffRules.hasdiffrule(:Base, :-, 1)
-    true
+julia> DiffRules.hasdiffrule(:Base, :-, 1)
+true
 
-    julia> DiffRules.hasdiffrule(:Base, :-, 2)
-    true
+julia> DiffRules.hasdiffrule(:Base, :-, 2)
+true
 
-    julia> DiffRules.hasdiffrule(:Base, :-, 3)
-    false
+julia> DiffRules.hasdiffrule(:Base, :-, 3)
+false
 ```
 """
 hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_DIFFRULES, (M, f, arity))
