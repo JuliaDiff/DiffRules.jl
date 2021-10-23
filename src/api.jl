@@ -16,12 +16,13 @@ interpolated wherever they are used on the RHS.
 
 Note that differentiation rules are purely symbolic, so no type annotations should be used.
 
-Examples:
+# Examples
 
+```julia
     @define_diffrule Base.cos(x)          = :(-sin(\$x))
     @define_diffrule Base.:/(x, y)        = :(inv(\$y)), :(-\$x / (\$y^2))
     @define_diffrule Base.polygamma(m, x) = :NaN,       :(polygamma(\$m + 1, \$x))
-
+```
 """
 macro define_diffrule(def)
     @assert isa(def, Expr) && def.head == :(=) "Diff rule expression does not have a left and right side"
@@ -50,8 +51,9 @@ interpolated into the returned expression.
 In the `n`-ary case, an `n`-tuple of expressions will be returned where the `i`th expression
 is the derivative of `f` w.r.t the `i`th argument.
 
-Examples:
+# Examples
 
+```jldoctest
     julia> DiffRules.diffrule(:Base, :sin, 1)
     :(cos(1))
 
@@ -60,9 +62,7 @@ Examples:
 
     julia> DiffRules.diffrule(:Base, :sin, :(x * y^2))
     :(cos(x * y ^ 2))
-
-    julia> DiffRules.diffrule(:Base, :^, :(x + 2), :c)
-    (:(c * (x + 2) ^ (c - 1)), :((x + 2) ^ c * log(x + 2)))
+```
 """
 diffrule(M::Union{Expr,Symbol}, f::Symbol, args...) = DEFINED_DIFFRULES[M,f,length(args)](args...)
 
@@ -74,8 +74,9 @@ otherwise.
 
 Here, `arity` refers to the number of arguments accepted by `f`.
 
-Examples:
+# Examples
 
+```jldoctest
     julia> DiffRules.hasdiffrule(:Base, :sin, 1)
     true
 
@@ -90,6 +91,7 @@ Examples:
 
     julia> DiffRules.hasdiffrule(:Base, :-, 3)
     false
+```
 """
 hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_DIFFRULES, (M, f, arity))
 
