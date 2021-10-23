@@ -1,24 +1,23 @@
-if VERSION < v"0.7-"
-    using Base.Test
-    srand(1)
-else
-    using Test
-    import Random
-    Random.seed!(1)
-end
-import SpecialFunctions, NaNMath, LogExpFunctions
 using DiffRules
+using Test
 
+import Documenter
+import SpecialFunctions, NaNMath, LogExpFunctions
+import Random
+Random.seed!(1)
 
 function finitediff(f, x)
     ϵ = cbrt(eps(typeof(x))) * max(one(typeof(x)), abs(x))
     return (f(x + ϵ) - f(x - ϵ)) / (ϵ + ϵ)
 end
 
+@testset "DiffRules" begin
+@testset "check rules" begin
 
 non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3)]
 
-for (M, f, arity) in DiffRules.diffrules()
+modules = (:Base, :SpecialFunctions, :NaNMath, :LogExpFunctions)
+for (M, f, arity) in DiffRules.diffrules(; modules=modules)
     (M, f, arity) ∈ non_numeric_arg_functions && continue
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
@@ -90,6 +89,26 @@ for xtype in [:Float64, :BigFloat, :Int64]
                 @test isnan(dy)
             end
         end
+    end
+end
+end
+
+    @testset "diffrules" begin
+        modules = Set(first(x) for x in DiffRules.diffrules())
+        @test modules == Set((:Base, :SpecialFunctions, :NaNMath))
+
+        modules = Set(first(x) for x in DiffRules.diffrules(; modules=(:Base, :LogExpFunctions)))
+        @test modules == Set((:Base, :LogExpFunctions))
+    end
+
+    @testset "doctests" begin
+        Documenter.DocMeta.setdocmeta!(
+            DiffRules,
+            :DocTestSetup,
+            :(using DiffRules, SpecialFunctions);
+            recursive=true,
+        )
+        Documenter.doctest(DiffRules)
     end
 end
 
