@@ -146,7 +146,7 @@ julia> first(DiffRules.diffrules())
 If you call `diffrules()`, only rules for Base, SpecialFunctions, and
 NaNMath are returned but no rules for LogExpFunctions:
 ```jldoctest
-julia> any(M in :LogExpFunctions for (M, _, _) in DiffRules.diffrules())
+julia> any(M === :LogExpFunctions for (M, _, _) in DiffRules.diffrules())
 false
 ```
 
@@ -154,7 +154,7 @@ If you set `filter_modules=nothing`, all rules defined in DiffRules are
 returned and in particular also rules for LogExpFunctions:
 ```jldoctest
 julia> any(
-           M in :LogExpFunctions
+           M === :LogExpFunctions
            for (M, _, _) in DiffRules.diffrules(; filter_modules=nothing)
        )
 true
