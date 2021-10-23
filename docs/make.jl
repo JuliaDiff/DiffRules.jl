@@ -17,4 +17,4 @@ makedocs(modules=[DiffRules],
          checkdocs=:exports,
 )
 
-deploydocs(repo = "github.com/JuliaDiff/DiffRules.jl")
+deploydocs(; repo="github.com/JuliaDiff/DiffRules.jl", push_preview=true)
