@@ -94,21 +94,31 @@ Examples:
 hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_DIFFRULES, (M, f, arity))
 
 """
-    diffrules()
+    diffrules(; modules=(:Base, :SpecialFunctions, :NaNMath))
 
-Return a list of keys that can be used to access all defined differentiation rules.
+Return a list of keys that can be used to access all defined differentiation rules for
+functions in the `modules`.
 
 Each key is of the form `(M::Symbol, f::Symbol, arity::Int)`.
 
-Here, `arity` refers to the number of arguments accepted by `f`.
+Here, `arity` refers to the number of arguments accepted by `f` and `M` is one of the
+`modules`.
 
-Examples:
+# Examples
 
-    julia> first(DiffRules.diffrules())
-    (:Base, :asind, 1)
+```jldoctest
+julia> first(DiffRules.diffrules())
+(:Base, :log2, 1)
 
+julia> first(DiffRules.diffrules(; modules=(:SpecialFunctions,)))
+(:SpecialFunctions, :erfi, 1)
+```
 """
-diffrules() = keys(DEFINED_DIFFRULES)
+function diffrules(; modules=(:Base, :SpecialFunctions, :NaNMath))
+    return Iterators.filter(keys(DEFINED_DIFFRULES)) do (M, _, _)
+        return M in modules
+    end
+end
 
 # For v0.6 and v0.7 compatibility, need to support having the diff rule function enter as a
 # `Expr(:quote...)` and a `QuoteNode`. When v0.6 support is dropped, the function will
