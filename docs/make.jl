@@ -9,4 +9,4 @@ makedocs(modules=[DiffRules],
          ),
 )
 
-deploydocs(repo = "github.com/JuliaDiff/DiffRules.jl")
+deploydocs(; repo="github.com/JuliaDiff/DiffRules.jl", push_preview=true)
