@@ -1,6 +1,5 @@
 # DiffRules
 
-[![Travis CI Status](https://travis-ci.org/JuliaDiff/DiffRules.jl.svg?branch=master)](https://travis-ci.org/JuliaDiff/DiffRules.jl)
 [![Github CI Status](https://github.com/JuliaDiff/DiffRules.jl/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/JuliaDiff/DiffRules.jl/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/JuliaDiff/DiffRules.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaDiff/DiffRules.jl?branch=master)
 
