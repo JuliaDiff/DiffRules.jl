@@ -149,7 +149,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 # logerfcx added in SpeciaFunctions 0.10, which requires Julia 1.3
 if VERSION ≥ v"1.3"
     @define_diffrule SpecialFunctions.logerfcx(x) =
-        :(  2 * ($x - inv(SpecialFunctions.erfcx($x)) / sqrt(π))  )
+        :(  2 * ($x - inv(SpecialFunctions.erfcx($x) * sqrt(π)))  )
 end
 
 # TODO:
