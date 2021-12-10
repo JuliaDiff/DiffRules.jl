@@ -139,8 +139,14 @@ To include all rules, specify `filter_modules = nothing`.
 # Examples
 
 ```jldoctest
-julia> first(DiffRules.diffrules())
-(:Base, :log2, 1)
+julia> first(DiffRules.diffrules()) isa Tuple{Symbol,Symbol,Int}
+true
+
+julia> (:Base, :log, 1) in DiffRules.diffrules()
+true
+
+julia> (:Base, :*, 2) in DiffRules.diffrules()
+true
 ```
 
 If you call `diffrules()`, only rules for Base, SpecialFunctions, and
