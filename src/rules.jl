@@ -121,8 +121,6 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule SpecialFunctions.erfi(x)        = :(  (2 / sqrt(π)) * exp($x * $x)        )
 @define_diffrule SpecialFunctions.erfcx(x)       =
     :(  (2 * $x * SpecialFunctions.erfcx($x)) - (2 / sqrt(π))  )
-@define_diffrule SpecialFunctions.logerfcx(x) =
-    :(  2 * ($x - inv(SpecialFunctions.erfcx($x)) / sqrt(π))  )
 @define_diffrule SpecialFunctions.dawson(x)      =
     :(  1 - (2 * $x * SpecialFunctions.dawson($x))  )
 @define_diffrule SpecialFunctions.digamma(x) =
@@ -147,6 +145,12 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
     :( -SpecialFunctions.bessely1($x)  )
 @define_diffrule SpecialFunctions.bessely1(x)    =
     :(  (SpecialFunctions.bessely0($x) - SpecialFunctions.bessely(2, $x)) / 2 )
+
+# logerfcx added in SpeciaFunctions 0.10, which requires Julia 1.3
+if VERSION ≥ v"1.3"
+    @define_diffrule SpecialFunctions.logerfcx(x) =
+        :(  2 * ($x - inv(SpecialFunctions.erfcx($x)) / sqrt(π))  )
+end
 
 # TODO:
 #
