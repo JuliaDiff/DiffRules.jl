@@ -146,8 +146,10 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule SpecialFunctions.bessely1(x)    =
     :(  (SpecialFunctions.bessely0($x) - SpecialFunctions.bessely(2, $x)) / 2 )
 
-# logerfcx added in SpeciaFunctions 0.10, which requires Julia 1.3
-if VERSION ≥ v"1.3"
+#= logerfcx added in SpeciaFunctions 0.10, which requires Julia 1.3,
+so we need this check here to make things work in Julia 1.0,
+and in general with older versions of SpecialFunctions =#
+if isdefined(SpecialFunctions, :logerfcx)
     @define_diffrule SpecialFunctions.logerfcx(x) =
         :(  2 * ($x - inv(SpecialFunctions.erfcx($x) * sqrt(π)))  )
 end
