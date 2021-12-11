@@ -17,7 +17,6 @@ non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3)]
 
 for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     (M, f, arity) ∈ non_numeric_arg_functions && continue
-    (M, f, arity) ∈ recently_defined_functions && continue
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
         deriv = DiffRules.diffrule(M, f, :goo)
