@@ -13,7 +13,7 @@ end
 @testset "DiffRules" begin
 @testset "check rules" begin
 
-non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3), (:Base, :mod, 2)]
+non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3)]
 
 for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     (M, f, arity) ∈ non_numeric_arg_functions && continue
@@ -45,7 +45,11 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
         derivs = DiffRules.diffrule(M, f, :foo, :bar)
         @eval begin
             let
-                foo, bar = rand(1:10), rand()
+                if "mod" == string($M.$f)
+                    foo, bar = rand() + 13, rand() + 5 # make sure x/y is not integer
+                else
+                    foo, bar = rand(1:10), rand()
+                end
                 dx, dy = $(derivs[1]), $(derivs[2])
                 if !(isnan(dx))
                     @test isapprox(dx, finitediff(z -> $M.$f(z, bar), float(foo)), rtol=0.05)
@@ -89,18 +93,6 @@ for xtype in [:Float64, :BigFloat, :Int64]
                 @test isnan(dy)
             end
         end
-    end
-end
-
-# Treat mod separately because of discontinuities at integers
-derivs = DiffRules.diffrule(:Base, :mod, :x, :y)
-@eval begin
-    let
-        x = randn()
-        y = randn()
-        dx, dy = $(derivs[1]), $(derivs[2])
-        @test isapprox(dx, finitediff(z -> mod(z, y), float(x)), rtol=0.05)
-        @test isapprox(dy, finitediff(z -> mod(x, z), float(y)), rtol=0.05)
     end
 end
 end
