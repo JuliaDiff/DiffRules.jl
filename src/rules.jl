@@ -140,6 +140,10 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
     :(  SpecialFunctions.airybiprime($x)  )
 @define_diffrule SpecialFunctions.airybiprime(x) =
     :(  $x * SpecialFunctions.airybi($x)  )
+@define_diffrule SpecialFunctions.airyaix(x)     =
+    :(  SpecialFunctions.airyaiprimex($x) + sqrt($x) * SpecialFunctions.airyaix($x)  )
+@define_diffrule SpecialFunctions.airyaiprimex(x) =
+    :(  $x * SpecialFunctions.airyaix($x) + sqrt($x) * SpecialFunctions.airyaiprimex($x)  )
 @define_diffrule SpecialFunctions.besselj0(x)    =
     :( -SpecialFunctions.besselj1($x)  )
 @define_diffrule SpecialFunctions.besselj1(x)    =
@@ -153,8 +157,6 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 #
 # eta
 # zeta
-# airyaix
-# airyaiprimex
 # airybix
 # airybiprimex
 
@@ -169,29 +171,34 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
     :NaN, :(  (SpecialFunctions.bessely($ν - 1, $x) - SpecialFunctions.bessely($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.besselk(ν, x)   =
     :NaN, :( -(SpecialFunctions.besselk($ν - 1, $x) + SpecialFunctions.besselk($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.besselkx(ν, x)  =
+    :NaN, :( -(SpecialFunctions.besselkx($ν - 1, $x) + SpecialFunctions.besselkx($ν + 1, $x)) / 2 + SpecialFunctions.besselkx($ν, $x)  )
 @define_diffrule SpecialFunctions.hankelh1(ν, x)  =
     :NaN, :(  (SpecialFunctions.hankelh1($ν - 1, $x) - SpecialFunctions.hankelh1($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.hankelh1x(ν, x) =
+    :NaN, :(  (SpecialFunctions.hankelh1x($ν - 1, $x) - SpecialFunctions.hankelh1x($ν + 1, $x)) / 2 - im * SpecialFunctions.hankelh1x($ν, $x)  )
 @define_diffrule SpecialFunctions.hankelh2(ν, x)  =
     :NaN, :(  (SpecialFunctions.hankelh2($ν - 1, $x) - SpecialFunctions.hankelh2($ν + 1, $x)) / 2  )
+@define_diffrule SpecialFunctions.hankelh2x(ν, x)  =
+    :NaN, :(  (SpecialFunctions.hankelh2x($ν - 1, $x) - SpecialFunctions.hankelh2x($ν + 1, $x)) / 2 + im * SpecialFunctions.hankelh2x($ν, $x)  )
+@define_diffrule SpecialFunctions.gamma(a, x)     = 
+    :NaN, :(-exp(-$x) * $x^($a - 1))
 @define_diffrule SpecialFunctions.polygamma(m, x) =
     :NaN, :(  SpecialFunctions.polygamma($m + 1, $x)  )
 @define_diffrule SpecialFunctions.beta(a, b)      =
     :( SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)) ), :(  SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b))     )
-@define_diffrule SpecialFunctions.logbeta(a, b)     =
+@define_diffrule SpecialFunctions.logbeta(a, b)   =
     :( SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)  ), :(  SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b)  )
+@define_diffrule SpecialFunctions.zeta(s, z)      =
+    :NaN, :( -$s * SpecialFunctions.zeta(1 + $s, $z) )
 
 # TODO:
 #
-# zeta
 # besseljx
 # besselyx
 # besselix
-# besselkx
 # besselh
 # besselhx
-# hankelh1x
-# hankelh2
-# hankelh2x
 
 # ternary #
 #---------#
