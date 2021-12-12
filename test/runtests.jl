@@ -13,10 +13,10 @@ end
 @testset "DiffRules" begin
 @testset "check rules" begin
 
-non_numeric_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ifelse, 3)]
+non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, :ifelse, 3)]
 
 for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
-    (M, f, arity) ∈ non_numeric_arg_functions && continue
+    (M, f, arity) ∈ non_diffeable_arg_functions && continue
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
         deriv = DiffRules.diffrule(M, f, :goo)
@@ -95,6 +95,23 @@ for xtype in [:Float64, :BigFloat, :Int64]
         end
     end
 end
+
+# Treat ldexp separately because of its integer second argument:
+derivs = DiffRules.diffrule(:Base, :ldexp, :x, :y)
+for xtype in [:Float64, :BigFloat]
+    for ytype in [:Integer, :UInt64, :Int64]
+        @eval begin
+            let
+                x = rand($xtype)
+                y = $ytype(rand(1 : 10))
+                dx, dy = $(derivs[1]), $(derivs[2])
+                @test isapprox(dx, finitediff(z -> ldexp(z, y), x), rtol=0.05)
+                @test isnan(dy)
+            end
+        end
+    end
+end
+
 end
 
     @testset "diffrules" begin
