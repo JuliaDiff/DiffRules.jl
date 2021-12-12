@@ -102,7 +102,7 @@ for xtype in [:Float64, :BigFloat]
     for ytype in [:Integer, :UInt64, :Int64]
         @eval begin
             let
-                x = $xtype(rand(1 : 10))
+                x = rand($xtype)
                 y = $ytype(rand(1 : 10))
                 dx, dy = $(derivs[1]), $(derivs[2])
                 @test isapprox(dx, finitediff(z -> ldexp(z, y), x), rtol=0.05)
