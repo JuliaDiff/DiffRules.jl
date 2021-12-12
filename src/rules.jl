@@ -83,11 +83,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( one($y) / ($x)     )
 @define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :( ($x isa Real && $x<=0) ? Base.oftype(float($x), NaN) : ($x^$y)*log($x) )
 
-if VERSION < v"0.7-"
-    @define_diffrule Base.atan2(x, y)   = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
-else
-    @define_diffrule Base.atan(x, y)    = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
-end
+@define_diffrule Base.atan(x, y)    = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
 @define_diffrule Base.hypot(x, y)  = :( $x / hypot($x, $y)                                      ), :(  $y / hypot($x, $y)                                                     )
 @define_diffrule Base.log(b, x)    = :( log($x) * inv(-log($b)^2 * $b)                          ), :( inv($x) / log($b)                                                       )
 @define_diffrule Base.ldexp(x, y)  = :( exp2($y)                                                ), :NaN
@@ -126,6 +122,8 @@ end
 @define_diffrule SpecialFunctions.erfi(x)        = :(  (2 / sqrt(π)) * exp($x * $x)        )
 @define_diffrule SpecialFunctions.erfcx(x)       =
     :(  (2 * $x * SpecialFunctions.erfcx($x)) - (2 / sqrt(π))  )
+@define_diffrule SpecialFunctions.logerfcx(x) =
+    :(  2 * ($x - inv(SpecialFunctions.erfcx($x) * sqrt(π)))  )
 @define_diffrule SpecialFunctions.dawson(x)      =
     :(  1 - (2 * $x * SpecialFunctions.dawson($x))  )
 @define_diffrule SpecialFunctions.digamma(x) =
@@ -256,7 +254,4 @@ end
     :(z = LogExpFunctions.logsubexp($x, $y); $x > $y ? exp($x - z) : -exp($x - z)),
     :(z = LogExpFunctions.logsubexp($x, $y); $x > $y ? -exp($y - z) : exp($y - z))
 
-# only defined in LogExpFunctions >= 0.3.2
-if isdefined(LogExpFunctions, :xlog1py)
-    @define_diffrule LogExpFunctions.xlog1py(x, y) = :(log1p($y)), :($x / (1 + $y))
-end
+@define_diffrule LogExpFunctions.xlog1py(x, y) = :(log1p($y)), :($x / (1 + $y))
