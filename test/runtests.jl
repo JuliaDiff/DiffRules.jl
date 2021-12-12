@@ -18,12 +18,16 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
         deriv = DiffRules.diffrule(M, f, :goo)
-        modifier = if f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)
+        modifier = if f in (:asec, :acsc, :asecd, :acscd, :acosh)
             1.0
+        elseif f === :acoth
+            1.1 # values too close to 1 are problematic for finite differencing
         elseif f === :log1mexp
             -1.0
         elseif f === :log2mexp
             -0.5
+        elseif f in (:airyaix, :airyaiprimex)
+            0.1 # values too close to 0 are problematic for finite differencing
         else
             0.0
         end
