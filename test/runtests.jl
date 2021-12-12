@@ -1,14 +1,12 @@
 using DiffRules
+using FiniteDifferences
 using Test
 
 import SpecialFunctions, NaNMath, LogExpFunctions
 import Random
 Random.seed!(1)
 
-function finitediff(f, x)
-    ϵ = cbrt(eps(typeof(x))) * max(one(typeof(x)), abs(x))
-    return (f(x + ϵ) - f(x - ϵ)) / (ϵ + ϵ)
-end
+const finitediff = central_fdm(5, 1)
 
 @testset "DiffRules" begin
 @testset "check rules" begin
@@ -32,7 +30,7 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
         @eval begin
             let
                 goo = rand() + $modifier
-                @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
+                @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-9 atol=1e-9
                 # test for 2pi functions
                 if "mod2pi" == string($M.$f)
                     goo = 4pi + $modifier
@@ -51,11 +49,11 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                     foo, bar = rand(1:10), rand()
                 end
                 dx, dy = $(derivs[1]), $(derivs[2])
-                if !(isnan(dx))
-                    @test isapprox(dx, finitediff(z -> $M.$f(z, bar), float(foo)), rtol=0.05)
+                if !isnan(dx)
+                    @test dx ≈ finitediff(z -> $M.$f(z, bar), float(foo)) rtol=1e-9 atol=1e-9
                 end
-                if !(isnan(dy))
-                    @test isapprox(dy, finitediff(z -> $M.$f(foo, z), bar), rtol=0.05)
+                if !isnan(dy)
+                    @test dy ≈ finitediff(z -> $M.$f(foo, z), bar) rtol=1e-9 atol=1e-9
                 end
             end
         end
@@ -89,7 +87,7 @@ for xtype in [:Float64, :BigFloat, :Int64]
                 x = $xtype(rand(1 : 10))
                 y = $mode
                 dx, dy = $(derivs[1]), $(derivs[2])
-                @test isapprox(dx, finitediff(z -> rem2pi(z, y), float(x)), rtol=0.05)
+                @test dx ≈ finitediff(z -> rem2pi(z, y), float(x)) rtol=1e-9 atol=1e-9
                 @test isnan(dy)
             end
         end
@@ -105,9 +103,20 @@ for xtype in [:Float64, :BigFloat]
                 x = rand($xtype)
                 y = $ytype(rand(1 : 10))
                 dx, dy = $(derivs[1]), $(derivs[2])
-                @test isapprox(dx, finitediff(z -> ldexp(z, y), x), rtol=0.05)
+                @test dx ≈ finitediff(z -> ldexp(z, y), x) rtol=1e-9 atol=1e-9
                 @test isnan(dy)
             end
+        end
+    end
+end
+
+# Check negative branch for `airybix` and `airybiprimex`
+for f in (:airybix, :airybiprimex)
+    deriv = DiffRules.diffrule(:SpecialFunctions, f, :goo)
+    @eval begin
+        let
+            goo = -rand()
+            @test $deriv ≈ finitediff(SpecialFunctions.$f, goo) rtol=1e-9 atol=1e-9
         end
     end
 end
