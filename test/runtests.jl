@@ -6,7 +6,9 @@ import SpecialFunctions, NaNMath, LogExpFunctions
 import Random
 Random.seed!(1)
 
-const finitediff = central_fdm(5, 1)
+# less accurate than `central_fdm` but avoids singularities for
+# e.g. `acoth`, `log`, `airyaix`, `airyaiprimex
+const finitediff = forward_fdm(5, 1)
 
 @testset "DiffRules" begin
 @testset "check rules" begin
@@ -18,16 +20,12 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
         deriv = DiffRules.diffrule(M, f, :goo)
-        modifier = if f in (:asec, :acsc, :asecd, :acscd, :acosh)
+        modifier = if f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)
             1.0
-        elseif f === :acoth
-            1.1 # values too close to 1 are problematic for finite differencing
         elseif f === :log1mexp
             -1.0
         elseif f === :log2mexp
             -0.5
-        elseif f in (:airyaix, :airyaiprimex)
-            0.1 # values too close to 0 are problematic for finite differencing
         else
             0.0
         end
