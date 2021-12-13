@@ -32,7 +32,7 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
             end
             @eval begin
                 let
-                    goo = T(rand() + $modifier)
+                    goo = $T(rand() + $modifier)
                     @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
                     # test for 2pi functions
                     if "mod2pi" == string($M.$f)
@@ -47,9 +47,9 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
             @eval begin
                 let
                     if "mod" == string($M.$f)
-                        foo, bar = T(rand() + 13), T(rand() + 5) # make sure x/y is not integer
+                        foo, bar = $T(rand() + 13), $T(rand() + 5) # make sure x/y is not integer
                     else
-                        foo, bar = rand(1:10), T(rand())
+                        foo, bar = rand(1:10), $T(rand())
                     end
                     dx, dy = $(derivs[1]), $(derivs[2])
                     if !(isnan(dx))
