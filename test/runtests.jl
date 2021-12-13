@@ -30,16 +30,16 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
         else
             0.0
         end
+        fd = if f in (:acoth, :log, :airyaix, :airyaiprimex)
+            # avoid singularities
+            finitediff_forward
+        else
+            finitediff
+        end
         @eval begin
             let
                 goo = rand() + $modifier
-                fd_deriv = if f in (:acoth, :log, :airyaix, :airyaiprimex)
-                    # avoid singularities
-                    finitediff_forward($M.$f, goo)
-                else
-                    finitediff($M.$f, goo)
-                end
-                @test $deriv ≈ fd_deriv rtol=1e-9 atol=1e-9
+                @test $deriv ≈ $fd($M.$f, goo) rtol=1e-9 atol=1e-9
                 # test for 2pi functions
                 if "mod2pi" == string($M.$f)
                     goo = 4pi + $modifier
