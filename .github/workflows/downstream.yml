@@ -1,9 +1,16 @@
 name: IntegrationTest
+
 on:
   push:
     branches: [master]
     tags: [v*]
   pull_request:
+
+concurrency:
+  # Skip intermediate builds: always.
+  # Cancel intermediate builds: only if it is a pull request build.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
 jobs:
   test:
@@ -18,6 +25,7 @@ jobs:
         os: [ubuntu-latest]
         package:
           - {user: JuliaDiff, repo: ForwardDiff.jl, group: All}
+          - {user: JuliaDiff, repo: ReverseDiff.jl, group: All}
           - {user: FluxML, repo: Tracker.jl, group: All}
           - {user: FluxML, repo: Zygote.jl, group: All}
           - {user: invenia, repo: Nabla.jl, group: All}

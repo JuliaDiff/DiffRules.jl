@@ -1,18 +1,20 @@
 name = "DiffRules"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
-version = "1.2.1"
+version = "1.9.0"
 
 [deps]
 IrrationalConstants = "92d709cd-6900-40b7-9082-c6be49f344b6"
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
-IrrationalConstants = "0.1"
+IrrationalConstants = "0.1.1"
+LogExpFunctions = "0.3.2"
 NaNMath = "0.3"
-SpecialFunctions = "0.8, 0.9, 0.10, 1.0"
-julia = "1"
+SpecialFunctions = "0.10, 1.0, 2"
+julia = "1.3"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"

@@ -66,10 +66,6 @@
 @define_diffrule SpecialFunctions.loggamma(x) =
     :(  SpecialFunctions.digamma($x)  )
 
-@define_diffrule Base.identity(x)             = :(  one($x)                            )
-@define_diffrule Base.conj(x)                 = :(  one($x)                            )
-@define_diffrule Base.adjoint(x)              = :(  one($x)                            )
-@define_diffrule Base.transpose(x)            = :(  one($x)                            )
 @define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
 
 # We provide this hook for special number types like `Interval`
@@ -86,13 +82,10 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule Base.:\(x, y) = :( -($y / $x / $x)    ), :( one($y) / ($x)     )
 @define_diffrule Base.:^(x, y) = :( $y * ($x^($y - 1)) ), :( ($x isa Real && $x<=0) ? Base.oftype(float($x), NaN) : ($x^$y)*log($x) )
 
-if VERSION < v"0.7-"
-    @define_diffrule Base.atan2(x, y)   = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
-else
-    @define_diffrule Base.atan(x, y)    = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
-end
+@define_diffrule Base.atan(x, y)    = :( $y / ($x^2 + $y^2)                                 ), :( -$x / ($x^2 + $y^2)                                                     )
 @define_diffrule Base.hypot(x, y)  = :( $x / hypot($x, $y)                                      ), :(  $y / hypot($x, $y)                                                     )
 @define_diffrule Base.log(b, x)    = :( log($x) * inv(-log($b)^2 * $b)                          ), :( inv($x) / log($b)                                                       )
+@define_diffrule Base.ldexp(x, y)  = :( exp2($y)                                                ), :NaN
 
 @define_diffrule Base.mod(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -floor(z)), NaN)) )
 @define_diffrule Base.rem(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -trunc(z)), NaN)) )
@@ -125,6 +118,17 @@ end
 @define_diffrule SpecialFunctions.erfi(x) = :( exp($x * $x) / $(DiffRules.halfsqrtπ) )
 @define_diffrule SpecialFunctions.erfcx(x) = :( 2 * $x * SpecialFunctions.erfcx($x) - $(DiffRules.twoinvsqrtπ) )
 
+@define_diffrule SpecialFunctions.erf(x)         = :(  DiffRules.twoinvsqrtπ * exp(-$x * $x)       )
+@define_diffrule SpecialFunctions.erfinv(x)      =
+    :(  DiffRules.halfsqrtπ * exp(SpecialFunctions.erfinv($x)^2)  )
+@define_diffrule SpecialFunctions.erfc(x)        = :( -(DiffRules.twoinvsqrtπ * exp(-$x * $x))       )
+@define_diffrule SpecialFunctions.erfcinv(x)     =
+    :( -(DiffRules.halfsqrtπDiffrules. * exp(SpecialFunctions.erfcinv($x)^2))  )
+@define_diffrule SpecialFunctions.erfi(x)        = :(  DiffRules.twoinvsqrtπ * exp($x * $x)        )
+@define_diffrule SpecialFunctions.erfcx(x)       =
+    :(  (2 * $x * SpecialFunctions.erfcx($x)) - DiffRules.twoinvsqrtπ  )
+@define_diffrule SpecialFunctions.logerfcx(x) =
+    :(  2 * ($x - inv(SpecialFunctions.erfcx($x) * DiffRules.sqrtπ))  )
 @define_diffrule SpecialFunctions.dawson(x)      =
     :(  1 - (2 * $x * SpecialFunctions.dawson($x))  )
 @define_diffrule SpecialFunctions.digamma(x) =
@@ -232,3 +236,27 @@ end
                                      :(ifelse(($y > $x) | (signbit($y) < signbit($x)), ifelse(isnan($y), zero($y), one($y)), ifelse(isnan($x), one($y), zero($y))))
 @define_diffrule NaNMath.min(x, y) = :(ifelse(($y < $x) | (signbit($y) > signbit($x)), ifelse(isnan($y), one($x), zero($x)), ifelse(isnan($x), zero($x), one($x)))),
                                      :(ifelse(($y < $x) | (signbit($y) > signbit($x)), ifelse(isnan($y), zero($y), one($y)), ifelse(isnan($x), one($x), zero($x))))
+
+###################
+# LogExpFunctions #
+###################
+
+# unary
+@define_diffrule LogExpFunctions.xlogx(x) = :(1 + log($x))
+@define_diffrule LogExpFunctions.logistic(x) = :(z = LogExpFunctions.logistic($x); z * (1 - z))
+@define_diffrule LogExpFunctions.logit(x) = :(inv($x * (1 - $x)))
+@define_diffrule LogExpFunctions.log1psq(x) = :(2 * $x / (1 + $x^2))
+@define_diffrule LogExpFunctions.log1pexp(x) = :(LogExpFunctions.logistic($x))
+@define_diffrule LogExpFunctions.log1mexp(x) = :(-exp($x - LogExpFunctions.log1mexp($x)))
+@define_diffrule LogExpFunctions.log2mexp(x) = :(-exp($x - LogExpFunctions.log2mexp($x)))
+@define_diffrule LogExpFunctions.logexpm1(x) = :(exp($x - LogExpFunctions.logexpm1($x)))
+
+# binary
+@define_diffrule LogExpFunctions.xlogy(x, y) = :(log($y)), :($x / $y)
+@define_diffrule LogExpFunctions.logaddexp(x, y) =
+    :(exp($x - LogExpFunctions.logaddexp($x, $y))), :(exp($y - LogExpFunctions.logaddexp($x, $y)))
+@define_diffrule LogExpFunctions.logsubexp(x, y) =
+    :(z = LogExpFunctions.logsubexp($x, $y); $x > $y ? exp($x - z) : -exp($x - z)),
+    :(z = LogExpFunctions.logsubexp($x, $y); $x > $y ? -exp($y - z) : exp($y - z))
+
+@define_diffrule LogExpFunctions.xlog1py(x, y) = :(log1p($y)), :($x / (1 + $y))
