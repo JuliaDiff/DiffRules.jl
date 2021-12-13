@@ -6,9 +6,10 @@ import SpecialFunctions, NaNMath, LogExpFunctions
 import Random
 Random.seed!(1)
 
-# less accurate than `central_fdm` but avoids singularities for
+# `forward_fdm` is less accurate than `central_fdm` but avoids singularities for
 # e.g. `acoth`, `log`, `airyaix`, `airyaiprimex
-const finitediff = forward_fdm(5, 1)
+const finitediff = central_fdm(5, 1)
+const finitediff_forward = forward_fdm(5, 1)
 
 @testset "DiffRules" begin
 @testset "check rules" begin
@@ -32,7 +33,13 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
         @eval begin
             let
                 goo = rand() + $modifier
-                @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-9 atol=1e-9
+                fd_deriv = if f in (:acoth, :log, :airyaix, :airyaiprimex)
+                    # avoid singularities
+                    finitediff_forward($M.$f, goo)
+                else
+                    finitediff($M.$f, goo)
+                end
+                @test $deriv ≈ fd_deriv rtol=1e-9 atol=1e-9
                 # test for 2pi functions
                 if "mod2pi" == string($M.$f)
                     goo = 4pi + $modifier
