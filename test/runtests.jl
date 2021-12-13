@@ -41,7 +41,7 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                 goo = rand() + $modifier
                 @test $deriv ≈ $fd($M.$f, goo) rtol=1e-9 atol=1e-9
                 # test for 2pi functions
-                if "mod2pi" == string($M.$f)
+                if $(f === :mod2pi)
                     goo = 4pi + $modifier
                     @test NaN === $deriv
                 end
@@ -50,7 +50,7 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     elseif arity == 2
         @test DiffRules.hasdiffrule(M, f, 2)
         derivs = DiffRules.diffrule(M, f, :foo, :bar)
-        fd = if f === :log
+        fd = if f in (:log, :^)
             # avoid singularities
             finitediff_forward
         else
@@ -58,14 +58,16 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
         end
         @eval begin
             let
-                foo, bar = if "mod" == string($M.$f)
+                foo, bar = if $(f === :mod)
                     rand() + 13, rand() + 5 # make sure x/y is not integer
+                elseif $(f === :polygamma)
+                    rand(1:10), rand() # only supports integers as first arguments
                 else
-                    rand(1:10), rand()
+                    rand(), rand()
                 end
                 dx, dy = $(derivs[1]), $(derivs[2])
                 if !isnan(dx)
-                    @test dx ≈ $fd(z -> $M.$f(z, bar), float(foo)) rtol=1e-9 atol=1e-9
+                    @test dx ≈ $fd(z -> $M.$f(z, bar), foo) rtol=1e-9 atol=1e-9
                 end
                 if !isnan(dy)
                     @test dy ≈ $fd(z -> $M.$f(foo, z), bar) rtol=1e-9 atol=1e-9
