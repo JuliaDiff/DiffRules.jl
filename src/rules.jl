@@ -189,6 +189,9 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 # binary #
 #--------#
 
+@define_diffrule SpecialFunctions.erf(x, y) =
+    :(  -2 / sqrt(π) * exp(-x^2)  ), :(  2 / sqrt(π) * exp(-y^2)  )
+
 # derivatives with respect to the order `ν` exist but are not implemented
 # (analogously to the ChainRules definitions in SpecialFunctions)
 
