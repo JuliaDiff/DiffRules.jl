@@ -58,14 +58,14 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
         end
         @eval begin
             let
-                if "mod" == string($M.$f)
-                    foo, bar = rand() + 13, rand() + 5 # make sure x/y is not integer
+                foo, bar = if "mod" == string($M.$f)
+                    rand() + 13, rand() + 5 # make sure x/y is not integer
                 else
-                    foo, bar = rand(1.0:10.0), rand()
+                    rand(1:10), rand()
                 end
                 dx, dy = $(derivs[1]), $(derivs[2])
                 if !isnan(dx)
-                    @test dx ≈ $fd(z -> $M.$f(z, bar), foo) rtol=1e-9 atol=1e-9
+                    @test dx ≈ $fd(z -> $M.$f(z, bar), float(foo)) rtol=1e-9 atol=1e-9
                 end
                 if !isnan(dy)
                     @test dy ≈ $fd(z -> $M.$f(foo, z), bar) rtol=1e-9 atol=1e-9
