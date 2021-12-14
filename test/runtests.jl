@@ -6,10 +6,7 @@ import SpecialFunctions, NaNMath, LogExpFunctions
 import Random
 Random.seed!(1)
 
-# `forward_fdm` is less accurate than `central_fdm` but avoids singularities for
-# e.g. `acoth`, `log`, `airyaix`, `airyaiprimex
 const finitediff = central_fdm(5, 1)
-const finitediff_forward = forward_fdm(5, 1)
 
 @testset "DiffRules" begin
 @testset "check rules" begin
@@ -21,28 +18,25 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     if arity == 1
         @test DiffRules.hasdiffrule(M, f, 1)
         deriv = DiffRules.diffrule(M, f, :goo)
-        modifier = if f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)
-            1.0
-        elseif f === :log1mexp
-            -1.0
-        elseif f === :log2mexp
-            -0.5
-        else
-            0.0
-        end
-        fd = if f in (:acoth, :log, :airyaix, :airyaiprimex)
-            # avoid singularities
-            finitediff_forward
-        else
-            finitediff
-        end
         @eval begin
             let
-                goo = rand() + $modifier
-                @test $deriv ≈ $fd($M.$f, goo) rtol=1e-9 atol=1e-9
+                goo = if $(f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth))
+                    # avoid singularities with finite differencing
+                    rand() + 1.5
+                elseif $(f in (:log, :airyaix, :airyaiprimex))
+                    # avoid singularities with finite differencing
+                    rand() + 0.5
+                elseif $(f === :log1mexp)
+                    rand() - 1.0
+                elseif $(f in (:log2mexp, :erfinv))
+                    rand() - 0.5
+                else
+                    rand()
+                end
+                @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-9 atol=1e-9
                 # test for 2pi functions
                 if $(f === :mod2pi)
-                    goo = 4pi + $modifier
+                    goo = 4 * pi
                     @test NaN === $deriv
                 end
             end
@@ -50,27 +44,30 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     elseif arity == 2
         @test DiffRules.hasdiffrule(M, f, 2)
         derivs = DiffRules.diffrule(M, f, :foo, :bar)
-        fd = if f in (:log, :^)
-            # avoid singularities
-            finitediff_forward
-        else
-            finitediff
-        end
         @eval begin
             let
                 foo, bar = if $(f === :mod)
                     rand() + 13, rand() + 5 # make sure x/y is not integer
                 elseif $(f === :polygamma)
                     rand(1:10), rand() # only supports integers as first arguments
+                elseif $(f in (:bessely, :besselyx))
+                    # avoid singularities with finite differencing
+                    rand(), rand() + 0.5
+                elseif $(f === :log)
+                    # avoid singularities with finite differencing
+                    rand() + 1.5, rand()
+                elseif $(f === :^)
+                    # avoid singularities with finite differencing
+                    rand() + 0.5, rand()
                 else
                     rand(), rand()
                 end
                 dx, dy = $(derivs[1]), $(derivs[2])
                 if !isnan(dx)
-                    @test dx ≈ $fd(z -> $M.$f(z, bar), foo) rtol=1e-9 atol=1e-9
+                    @test dx ≈ finitediff(z -> $M.$f(z, bar), foo) rtol=1e-9 atol=1e-9
                 end
                 if !isnan(dy)
-                    @test dy ≈ $fd(z -> $M.$f(foo, z), bar) rtol=1e-9 atol=1e-9
+                    @test dy ≈ finitediff(z -> $M.$f(foo, z), bar) rtol=1e-9 atol=1e-9
                 end
             end
         end
