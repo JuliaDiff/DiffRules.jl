@@ -22,13 +22,13 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
             @test DiffRules.hasdiffrule(M, f, 1)
             deriv = DiffRules.diffrule(M, f, :goo)
             modifier = if f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)
-                1.0
+                one(T)
             elseif f === :log1mexp
-                -1.0
+                -one(T)
             elseif f === :log2mexp
-                -0.5
+                -(one(T) / 2)
             else
-                0.0
+                zero(T)
             end
             @eval begin
                 let
@@ -37,8 +37,8 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                     @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
                     # test for 2pi functions
                     if "mod2pi" == string($M.$f)
-                        goo = 4pi + $modifier
-                        @test NaN === $deriv
+                        goo = $(DiffRules.fourπ) + $modifier
+                        @test $T(NaN) === $deriv
                     end
                 end
             end
