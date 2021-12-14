@@ -59,8 +59,8 @@
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
 @define_diffrule Base.sinc(x)                 = :(  cosc($x)                           )
 @define_diffrule Base.deg2rad(x)              = :(   deg2rad(one($x))  )
-@define_diffrule Base.mod2pi(x)               = :(  isinteger($x / $twoπ) ? oftype(float($x), NaN) : one(float($x)) )
-@define_diffrule Base.rad2deg(x)              = :(  rand2deg(one($x))  )
+@define_diffrule Base.mod2pi(x)               = :(  isinteger($x / $(DiffRules.twoπ)) ? oftype(float($x), NaN) : one(float($x)) )
+@define_diffrule Base.rad2deg(x)              = :(  rad2deg(one($x))  )
 @define_diffrule SpecialFunctions.gamma(x) =
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
 @define_diffrule SpecialFunctions.loggamma(x) =
