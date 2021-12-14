@@ -118,13 +118,13 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule SpecialFunctions.erfi(x) = :( 2 * exp($x * $x) * $(DiffRules.invsqrtπ) )
 @define_diffrule SpecialFunctions.erfcx(x) = :( 2 * ($x * SpecialFunctions.erfcx($x) - $(DiffRules.invsqrtπ)) )
 
-@define_diffrule SpecialFunctions.erf(x)         = :(  2 * (DiffRules.invsqrtπ * exp(-$x * $x))       )
+@define_diffrule SpecialFunctions.erf(x)         = :(  2 * ($(DiffRules.invsqrtπ) * exp(-$x^2))       )
 @define_diffrule SpecialFunctions.erfinv(x)      =
     :(  (DiffRules.sqrtπ * exp(SpecialFunctions.erfinv($x)^2)) / 2  )
-@define_diffrule SpecialFunctions.erfc(x)        = :( -(DiffRules.invsqrtπ * exp(-$x * $x) * 2)       )
+@define_diffrule SpecialFunctions.erfc(x)        = :( -(DiffRules.invsqrtπ * exp(-$x^2) * 2)       )
 @define_diffrule SpecialFunctions.erfcinv(x)     =
     :( -(DiffRules.sqrtπ * exp(SpecialFunctions.erfcinv($x)^2)) / 2  )
-@define_diffrule SpecialFunctions.erfi(x)        = :(  DiffRules.invsqrtπ * exp($x * $x) * 2        )
+@define_diffrule SpecialFunctions.erfi(x)        = :(  DiffRules.invsqrtπ * exp($x^2) * 2        )
 @define_diffrule SpecialFunctions.erfcx(x)       =
     :(  2 * (($x * SpecialFunctions.erfcx($x)) - DiffRules.invsqrtπ)  )
 @define_diffrule SpecialFunctions.logerfcx(x) =
