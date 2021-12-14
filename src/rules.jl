@@ -66,7 +66,7 @@
 @define_diffrule SpecialFunctions.loggamma(x) =
     :(  SpecialFunctions.digamma($x)  )
 
-@define_diffrule Base.abs(x)                  = :( _abs_deriv($x)            )
+@define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
 
 # We provide this hook for special number types like `Interval`
 # that need their own special definition of `abs`.
