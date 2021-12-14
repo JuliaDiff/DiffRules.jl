@@ -1,6 +1,8 @@
 using DiffRules
 using Test
 
+using IrrationalConstants: fourπ
+
 import SpecialFunctions, NaNMath, LogExpFunctions
 import Random
 Random.seed!(1)
@@ -37,7 +39,7 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                     @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
                     # test for 2pi functions
                     if "mod2pi" == string($M.$f)
-                        goo = $(DiffRules.fourπ) + $modifier
+                        goo = $(fourπ) + $modifier
                         @test $T(NaN) === $deriv
                     end
                 end
