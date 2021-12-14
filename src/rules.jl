@@ -12,7 +12,7 @@
 @define_diffrule Base.abs2(x)                 = :(  $x + $x                            )
 @define_diffrule Base.inv(x)                  = :( -abs2(inv($x))                      )
 @define_diffrule Base.log(x)                  = :(  inv($x)                            )
-@define_diffrule Base.log10(x)                = :(  inv($x) / $logten      )
+@define_diffrule Base.log10(x)                = :(  inv($x) / $(DiffRules.logten)      )
 @define_diffrule Base.log2(x)                 = :(  inv($x) / $(DiffRules.logtwo)      )
 @define_diffrule Base.log1p(x)                = :(  inv($x + 1)                        )
 @define_diffrule Base.exp(x)                  = :(  exp($x)                            )
@@ -111,7 +111,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 
 # unary #
 #-------#
-@define_diffrule SpecialFunctions.erf(x) = :( 2 * exp(-$x^2) * $invsqrtπ )
+@define_diffrule SpecialFunctions.erf(x) = :( 2 * exp(-$x^2) * $(DiffRules.invsqrtπ) )
 @define_diffrule SpecialFunctions.erfinv(x) = :( (exp(SpecialFunctions.erfinv($x)^2) * $(DiffRules.sqrtπ)) / 2 )
 @define_diffrule SpecialFunctions.erfc(x) = :( -(exp(-$x * $x) * $(DiffRules.invsqrtπ)) * 2 )
 @define_diffrule SpecialFunctions.erfcinv(x) = :( -(exp(SpecialFunctions.erfcinv($x)^2) * $(DiffRules.sqrtπ)) / 2 )
@@ -222,8 +222,8 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule NaNMath.acosh(x)  = :(  inv(NaNMath.sqrt(NaNMath.pow($x, oftype($x, 2)) - 1))  )
 @define_diffrule NaNMath.atanh(x)  = :(  inv(1 - NaNMath.pow($x, oftype($x, 2)))                )
 @define_diffrule NaNMath.log(x)    = :(  inv($x)                                    )
-@define_diffrule NaNMath.log2(x)   = :(  inv($logtwo * $x)  )
-@define_diffrule NaNMath.log10(x)  = :(  inv($logten * $x)  )
+@define_diffrule NaNMath.log2(x)   = :(  inv($(DiffRules.logtwo) * $x)  )
+@define_diffrule NaNMath.log10(x)  = :(  inv($(DiffRules.logten) * $x)  )
 @define_diffrule NaNMath.log1p(x)  = :(  inv($x + 1)                                )
 @define_diffrule NaNMath.lgamma(x) = :(  SpecialFunctions.digamma($x)               )
 
