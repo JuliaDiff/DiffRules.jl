@@ -12,7 +12,7 @@
 @define_diffrule Base.abs2(x)                 = :(  $x + $x                            )
 @define_diffrule Base.inv(x)                  = :( -abs2(inv($x))                      )
 @define_diffrule Base.log(x)                  = :(  inv($x)                            )
-@define_diffrule Base.log10(x)                = :(  inv($x) / $(DiffRules.logten)      )
+@define_diffrule Base.log10(x)                = :(  inv($x) / $logten      )
 @define_diffrule Base.log2(x)                 = :(  inv($x) / $(DiffRules.logtwo)      )
 @define_diffrule Base.log1p(x)                = :(  inv($x + 1)                        )
 @define_diffrule Base.exp(x)                  = :(  exp($x)                            )
@@ -58,9 +58,9 @@
 @define_diffrule Base.acsch(x)                = :( -inv(abs($x) * sqrt(1 + $x^2))      )
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
 @define_diffrule Base.sinc(x)                 = :(  cosc($x)                           )
-@define_diffrule Base.deg2rad(x)              = :(  oftype($x, π / 180)                )
-@define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? oftype($x, NaN) : one($x) )
-@define_diffrule Base.rad2deg(x)              = :(  oftype($x, 180 / π)                )
+@define_diffrule Base.deg2rad(x)              = :(   deg2rad(one($x))  )
+@define_diffrule Base.mod2pi(x)               = :(  isinteger($x / $twoπ) ? oftype(float($x), NaN) : one(float($x)) )
+@define_diffrule Base.rad2deg(x)              = :(  rand2deg(one($x))  )
 @define_diffrule SpecialFunctions.gamma(x) =
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
 @define_diffrule SpecialFunctions.loggamma(x) =
@@ -111,7 +111,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 
 # unary #
 #-------#
-@define_diffrule SpecialFunctions.erf(x) = :( 2 * exp(-$x * $x) * $(DiffRules.invsqrtπ) )
+@define_diffrule SpecialFunctions.erf(x) = :( 2 * exp(-$x^2) * $invsqrtπ )
 @define_diffrule SpecialFunctions.erfinv(x) = :( (exp(SpecialFunctions.erfinv($x)^2) * $(DiffRules.sqrtπ)) / 2 )
 @define_diffrule SpecialFunctions.erfc(x) = :( -(exp(-$x * $x) * $(DiffRules.invsqrtπ)) * 2 )
 @define_diffrule SpecialFunctions.erfcinv(x) = :( -(exp(SpecialFunctions.erfcinv($x)^2) * $(DiffRules.sqrtπ)) / 2 )
@@ -222,8 +222,8 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule NaNMath.acosh(x)  = :(  inv(NaNMath.sqrt(NaNMath.pow($x, oftype($x, 2)) - 1))  )
 @define_diffrule NaNMath.atanh(x)  = :(  inv(1 - NaNMath.pow($x, oftype($x, 2)))                )
 @define_diffrule NaNMath.log(x)    = :(  inv($x)                                    )
-@define_diffrule NaNMath.log2(x)   = :(  inv($x) / NaNMath.log(oftype($x, 2))       )
-@define_diffrule NaNMath.log10(x)  = :(  inv($x) / NaNMath.log(oftype($x, 10))      )
+@define_diffrule NaNMath.log2(x)   = :(  inv($logtwo * $x)  )
+@define_diffrule NaNMath.log10(x)  = :(  inv($logten * $x)  )
 @define_diffrule NaNMath.log1p(x)  = :(  inv($x + 1)                                )
 @define_diffrule NaNMath.lgamma(x) = :(  SpecialFunctions.digamma($x)               )
 
