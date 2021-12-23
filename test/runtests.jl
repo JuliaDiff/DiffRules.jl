@@ -56,9 +56,12 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                 elseif $(f === :log)
                     # avoid singularities with finite differencing
                     rand() + 1.5, rand()
-                elseif $(f === :^)
+                elseif $(f in (:^, :pow))
                     # avoid singularities with finite differencing
                     rand() + 0.5, rand()
+                elseif $(f === :logbeta)
+                    # avoid singularities with finite differencing
+                    rand() + 0.5, rand() + 0.5
                 else
                     rand(), rand()
                 end
