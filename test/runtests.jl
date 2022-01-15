@@ -38,7 +38,7 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                         rand($T)
                     end
                     @test $deriv isa $T
-                    @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-3 atol=1e-3
+                    @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-2 atol=1e-3
                     # test for 2pi functions
                     if $(f === :mod2pi)
                         goo = 4 * pi
@@ -69,10 +69,10 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                     end
                     dx, dy = $(derivs[1]), $(derivs[2])
                     if !(isnan(dx))
-                        @test dx ≈ finitediff(z -> $M.$f(z, bar), foo) rtol=1e-3 atol=1e-3
+                        @test dx ≈ finitediff(z -> $M.$f(z, bar), foo) rtol=1e-2 atol=1e-3
                     end
                     if !(isnan(dy))
-                        @test dy ≈ finitediff(z -> $M.$f(foo, z), bar) rtol=1e-3 atol=1e-3
+                        @test dy ≈ finitediff(z -> $M.$f(foo, z), bar) rtol=1e-2 atol=1e-3
                     end
                 end
             end
