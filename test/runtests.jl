@@ -1,5 +1,6 @@
 using DiffRules
 using Test
+using FiniteDifferences
 
 using IrrationalConstants: fourπ
 
@@ -7,10 +8,8 @@ import SpecialFunctions, NaNMath, LogExpFunctions
 import Random
 Random.seed!(1)
 
-function finitediff(f, x)
-    ϵ = cbrt(eps(typeof(x))) * max(one(typeof(x)), abs(x))
-    return (f(x + ϵ) - f(x - ϵ)) / (ϵ + ϵ)
-end
+# Set `max_range` to avoid domain errors.
+const finitediff = central_fdm(5, 1, max_range=1e-3)
 
 @testset "DiffRules" begin
 @testset "check rules" begin
@@ -23,24 +22,27 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
         if arity == 1
             @test DiffRules.hasdiffrule(M, f, 1)
             deriv = DiffRules.diffrule(M, f, :goo)
-            modifier = if f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth)
-                one(T)
-            elseif f === :log1mexp
-                -one(T)
-            elseif f === :log2mexp
-                -(one(T) / 2)
-            else
-                zero(T)
-            end
             @eval begin
                 let
-                    goo = rand($T) + $modifier
+                    goo = if $(f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth))
+                        # avoid singularities with finite differencing
+                        rand($T) + $T(1.5)
+                    elseif $(f in (:log, :airyaix, :airyaiprimex))
+                        # avoid singularities with finite differencing
+                        rand($T) + $T(0.5)
+                    elseif $(f === :log1mexp)
+                        rand($T) - one($T)
+                    elseif $(f in (:log2mexp, :erfinv))
+                        rand($T) - $T(0.5)
+                    else
+                        rand($T)
+                    end
                     @test $deriv isa $T
-                    @test isapprox($deriv, finitediff($M.$f, goo), rtol=0.05)
+                    @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-3 atol=1e-3
                     # test for 2pi functions
-                    if "mod2pi" == string($M.$f)
-                        goo = $(fourπ) + $modifier
-                        @test $T(NaN) === $deriv
+                    if $(f === :mod2pi)
+                        goo = 4 * pi
+                        @test NaN === $deriv
                     end
                 end
             end
@@ -49,17 +51,28 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
             derivs = DiffRules.diffrule(M, f, :foo, :bar)
             @eval begin
                 let
-                    if "mod" == string($M.$f)
-                        foo, bar = rand($T) + 13, rand($T) + 5 # make sure x/y is not integer
+                    foo, bar = if $(f === :mod)
+                        rand() + 13, rand() + 5 # make sure x/y is not integer
+                    elseif $(f === :polygamma)
+                        rand(1:10), rand() # only supports integers as first arguments
+                    elseif $(f in (:bessely, :besselyx))
+                        # avoid singularities with finite differencing
+                        rand(), rand() + 0.5
+                    elseif $(f === :log)
+                        # avoid singularities with finite differencing
+                        rand() + 1.5, rand()
+                    elseif $(f === :^)
+                        # avoid singularities with finite differencing
+                        rand() + 0.5, rand()
                     else
-                        foo, bar = rand(1:10), rand($T)
+                        rand(), rand()
                     end
                     dx, dy = $(derivs[1]), $(derivs[2])
                     if !(isnan(dx))
-                        @test isapprox(dx, finitediff(z -> $M.$f(z, bar), float(foo)), rtol=0.05)
+                        @test dx ≈ finitediff(z -> $M.$f(z, bar), foo) rtol=1e-3 atol=1e-3
                     end
                     if !(isnan(dy))
-                        @test isapprox(dy, finitediff(z -> $M.$f(foo, z), bar), rtol=0.05)
+                        @test dy ≈ finitediff(z -> $M.$f(foo, z), bar) rtol=1e-3 atol=1e-3
                     end
                 end
             end
