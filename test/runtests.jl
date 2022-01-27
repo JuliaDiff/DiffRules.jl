@@ -70,28 +70,29 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                         rand($T), rand($T)
                     end
                     dx, dy = $(derivs[1]), $(derivs[2])
-
-                    if foo isa AbstractFloat
-                        if dx isa Complex
-                            @test dx isa Complex{$T}
-                        else
-                            @test dx isa $T
-                        end
-                    end
-
-                    if bar isa AbstractFloat
-                        if dy isa Complex
-                            @test dy isa Complex{$T}
-                        else
-                            @test dy isa $T
-                        end
-                    end
-
                     if !(isnan(dx))
                         @test dx ≈ finitediff(z -> $M.$f(z, bar), foo) rtol=1e-2 atol=1e-3
+
+                        # Check type, if applicable.
+                        if foo isa AbstractFloat
+                            if dx isa Complex
+                                @test dx isa Complex{$T}
+                            else
+                                @test dx isa $T
+                            end
+                        end
                     end
                     if !(isnan(dy))
                         @test dy ≈ finitediff(z -> $M.$f(foo, z), bar) rtol=1e-2 atol=1e-3
+
+                        # Check type, if applicable.
+                        if bar isa AbstractFloat
+                            if dy isa Complex
+                                @test dy isa Complex{$T}
+                            else
+                                @test dy isa $T
+                            end
+                        end
                     end
                 end
             end
