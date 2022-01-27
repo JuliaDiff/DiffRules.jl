@@ -52,22 +52,39 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
             @eval begin
                 let
                     foo, bar = if $(f === :mod)
-                        rand() + 13, rand() + 5 # make sure x/y is not integer
+                        rand($T) + 13, rand($T) + 5 # make sure x/y is not integer
                     elseif $(f === :polygamma)
-                        rand(1:10), rand() # only supports integers as first arguments
+                        rand(1:10), rand($T) # only supports integers as first arguments
                     elseif $(f in (:bessely, :besselyx))
                         # avoid singularities with finite differencing
-                        rand(), rand() + 0.5
+                        rand($T), rand($T) + $T(0.5)
                     elseif $(f === :log)
                         # avoid singularities with finite differencing
-                        rand() + 1.5, rand()
+                        rand($T) + $T(1.5), rand($T)
                     elseif $(f === :^)
                         # avoid singularities with finite differencing
-                        rand() + 0.5, rand()
+                        rand($T) + $T(0.5), rand($T)
                     else
-                        rand(), rand()
+                        rand($T), rand($T)
                     end
                     dx, dy = $(derivs[1]), $(derivs[2])
+
+                    if foo isa AbstractFloat
+                        if dx isa Complex
+                            @test dx isa Complex{$T}
+                        else
+                            @test dx isa $T
+                        end
+                    end
+
+                    if bar isa AbstractFloat
+                        if dy isa Complex
+                            @test dy isa Complex{$T}
+                        else
+                            @test dy isa $T
+                        end
+                    end
+
                     if !(isnan(dx))
                         @test dx ≈ finitediff(z -> $M.$f(z, bar), foo) rtol=1e-2 atol=1e-3
                     end
