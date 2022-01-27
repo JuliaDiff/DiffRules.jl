@@ -5,8 +5,8 @@
 # unary #
 #-------#
 
-@define_diffrule Base.:+(x)                   = :(  one($x)                            )
-@define_diffrule Base.:-(x)                   = :( -one($x)                            )
+@define_diffrule Base.:+(x)                   = :(   1                                 )
+@define_diffrule Base.:-(x)                   = :(  -1                                 )
 @define_diffrule Base.sqrt(x)                 = :(  inv(2 * sqrt($x))                  )
 @define_diffrule Base.cbrt(x)                 = :(  inv(3 * cbrt($x)^2)                )
 @define_diffrule Base.abs2(x)                 = :(  $x + $x                            )
