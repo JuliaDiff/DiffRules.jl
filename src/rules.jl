@@ -111,6 +111,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 
 # unary #
 #-------#
+
 @define_diffrule SpecialFunctions.erf(x)         = :(  2 * ($invsqrtπ * exp(-$x^2))       )
 @define_diffrule SpecialFunctions.erfinv(x)      =
     :(  ($sqrtπ * exp(SpecialFunctions.erfinv($x)^2)) / 2  )
