@@ -87,8 +87,8 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule Base.log(b, x)    = :( log($x) * inv(-log($b)^2 * $b)                          ), :( inv($x) / log($b)                                                       )
 @define_diffrule Base.ldexp(x, y)  = :( exp2($y)                                                ), :NaN
 
-@define_diffrule Base.mod(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -floor(z)), NaN)) )
-@define_diffrule Base.rem(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -trunc(z)), NaN)) )
+@define_diffrule Base.mod(x, y)    = :( z = $x / $y; ifelse(isinteger(z), oftype(z, NaN), one(z)) ), :(  z = $x / $y; ifelse(isinteger(z), oftype(z, NaN), -floor(z)) )
+@define_diffrule Base.rem(x, y)    = :( z = $x / $y; ifelse(isinteger(z), oftype(z, NaN), one(z)) ), :(  z = $x / $y; ifelse(isinteger(z), oftype(z, NaN), -trunc(z)) )
 @define_diffrule Base.rem2pi(x, r) = :( 1                                                       ), :NaN
 @define_diffrule Base.max(x, y)    = :( $x > $y ? one($x) : zero($x)                            ), :( $x > $y ? zero($y) : one($y)                                            )
 @define_diffrule Base.min(x, y)    = :( $x > $y ? zero($x) : one($x)                            ), :( $x > $y ? one($y) : zero($y)                                            )
@@ -167,19 +167,19 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 #--------#
 
 @define_diffrule SpecialFunctions.besselj(ν, x)   =
-    :NaN, :(  (SpecialFunctions.besselj($ν - 1, $x) - SpecialFunctions.besselj($ν + 1, $x)) / 2  )
+    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.besselj($ν - 1, $x) - SpecialFunctions.besselj($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.besseli(ν, x)   =
-    :NaN, :(  (SpecialFunctions.besseli($ν - 1, $x) + SpecialFunctions.besseli($ν + 1, $x)) / 2  )
+    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.besseli($ν - 1, $x) + SpecialFunctions.besseli($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.bessely(ν, x)   =
-    :NaN, :(  (SpecialFunctions.bessely($ν - 1, $x) - SpecialFunctions.bessely($ν + 1, $x)) / 2  )
+    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.bessely($ν - 1, $x) - SpecialFunctions.bessely($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.besselk(ν, x)   =
-    :NaN, :( -(SpecialFunctions.besselk($ν - 1, $x) + SpecialFunctions.besselk($ν + 1, $x)) / 2  )
+    :(oftype(float($ν), NaN)), :( -(SpecialFunctions.besselk($ν - 1, $x) + SpecialFunctions.besselk($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.hankelh1(ν, x)  =
-    :NaN, :(  (SpecialFunctions.hankelh1($ν - 1, $x) - SpecialFunctions.hankelh1($ν + 1, $x)) / 2  )
+    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.hankelh1($ν - 1, $x) - SpecialFunctions.hankelh1($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.hankelh2(ν, x)  =
-    :NaN, :(  (SpecialFunctions.hankelh2($ν - 1, $x) - SpecialFunctions.hankelh2($ν + 1, $x)) / 2  )
+    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.hankelh2($ν - 1, $x) - SpecialFunctions.hankelh2($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.polygamma(m, x) =
-    :NaN, :(  SpecialFunctions.polygamma($m + 1, $x)  )
+    :(oftype(float($m), NaN)), :(  SpecialFunctions.polygamma($m + 1, $x)  )
 @define_diffrule SpecialFunctions.beta(a, b)      =
     :( SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)) ), :(  SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b))     )
 @define_diffrule SpecialFunctions.logbeta(a, b)     =
