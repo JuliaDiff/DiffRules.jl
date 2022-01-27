@@ -37,7 +37,9 @@ for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
                     else
                         rand($T)
                     end
-                    @test $deriv isa $T
+                    # We're happy with types with the correct promotion behavior, e.g.
+                    # it's fine to return `1` as a derivative despite input being `Float64`.
+                    @test one($T) * $deriv isa $T
                     @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-2 atol=1e-3
                     # test for 2pi functions
                     if $(f === :mod2pi)
