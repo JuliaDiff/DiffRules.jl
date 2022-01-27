@@ -161,19 +161,19 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 #--------#
 
 @define_diffrule SpecialFunctions.besselj(ν, x)   =
-    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.besselj($ν - 1, $x) - SpecialFunctions.besselj($ν + 1, $x)) / 2  )
+    :NaN, :(  (SpecialFunctions.besselj($ν - 1, $x) - SpecialFunctions.besselj($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.besseli(ν, x)   =
-    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.besseli($ν - 1, $x) + SpecialFunctions.besseli($ν + 1, $x)) / 2  )
+    :NaN, :(  (SpecialFunctions.besseli($ν - 1, $x) + SpecialFunctions.besseli($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.bessely(ν, x)   =
-    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.bessely($ν - 1, $x) - SpecialFunctions.bessely($ν + 1, $x)) / 2  )
+    :NaN, :(  (SpecialFunctions.bessely($ν - 1, $x) - SpecialFunctions.bessely($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.besselk(ν, x)   =
-    :(oftype(float($ν), NaN)), :( -(SpecialFunctions.besselk($ν - 1, $x) + SpecialFunctions.besselk($ν + 1, $x)) / 2  )
+    :NaN, :( -(SpecialFunctions.besselk($ν - 1, $x) + SpecialFunctions.besselk($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.hankelh1(ν, x)  =
-    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.hankelh1($ν - 1, $x) - SpecialFunctions.hankelh1($ν + 1, $x)) / 2  )
+    :NaN, :(  (SpecialFunctions.hankelh1($ν - 1, $x) - SpecialFunctions.hankelh1($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.hankelh2(ν, x)  =
-    :(oftype(float($ν), NaN)), :(  (SpecialFunctions.hankelh2($ν - 1, $x) - SpecialFunctions.hankelh2($ν + 1, $x)) / 2  )
+    :NaN, :(  (SpecialFunctions.hankelh2($ν - 1, $x) - SpecialFunctions.hankelh2($ν + 1, $x)) / 2  )
 @define_diffrule SpecialFunctions.polygamma(m, x) =
-    :(oftype(float($m), NaN)), :(  SpecialFunctions.polygamma($m + 1, $x)  )
+    :NaN, :(  SpecialFunctions.polygamma($m + 1, $x)  )
 @define_diffrule SpecialFunctions.beta(a, b)      =
     :( SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)) ), :(  SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b))     )
 @define_diffrule SpecialFunctions.logbeta(a, b)     =
