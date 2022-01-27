@@ -16,7 +16,7 @@ const finitediff = central_fdm(5, 1, max_range=1e-3)
 
 non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, :ifelse, 3)]
 
-for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
+@testset "($M, $f, $arity)" for (M, f, arity) in DiffRules.diffrules(; filter_modules=nothing)
     for T in [Float32, Float64]
         (M, f, arity) ∈ non_diffeable_arg_functions && continue
         if arity == 1
