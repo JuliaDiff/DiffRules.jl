@@ -93,17 +93,17 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
             @test DiffRules.hasdiffrule(M, f, 3)
             derivs = DiffRules.diffrule(M, f, :foo, :bar, :goo)
             @eval begin
-            foo, bar, goo = randn(3)
-            dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
-            if !(isnan(dx))
-            @test isapprox(dx, finitediff(x -> $M.$f(x, bar, goo), foo), rtol=0.05)
-            end
-            if !(isnan(dy))
-            @test isapprox(dy, finitediff(y -> $M.$f(foo, y, goo), bar), rtol=0.05)
-            end
-            if !(isnan(dz))
-            @test isapprox(dz, finitediff(z -> $M.$f(foo, bar, z), goo), rtol=0.05)
-            end
+                foo, bar, goo = randn(3)
+                dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
+                if !(isnan(dx))
+                    @test isapprox(dx, finitediff(x -> $M.$f(x, bar, goo), foo), rtol=0.05)
+                end
+                if !(isnan(dy))
+                    @test isapprox(dy, finitediff(y -> $M.$f(foo, y, goo), bar), rtol=0.05)
+                end
+                if !(isnan(dz))
+                    @test isapprox(dz, finitediff(z -> $M.$f(foo, bar, z), goo), rtol=0.05)
+                end
             end
             =#
         end
