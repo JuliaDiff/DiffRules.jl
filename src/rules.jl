@@ -5,19 +5,19 @@
 # unary #
 #-------#
 
-@define_diffrule Base.:+(x)                   = :(  1                                  )
-@define_diffrule Base.:-(x)                   = :( -1                                  )
+@define_diffrule Base.:+(x)                   = :(   1                                 )
+@define_diffrule Base.:-(x)                   = :(  -1                                 )
 @define_diffrule Base.sqrt(x)                 = :(  inv(2 * sqrt($x))                  )
 @define_diffrule Base.cbrt(x)                 = :(  inv(3 * cbrt($x)^2)                )
 @define_diffrule Base.abs2(x)                 = :(  $x + $x                            )
 @define_diffrule Base.inv(x)                  = :( -abs2(inv($x))                      )
 @define_diffrule Base.log(x)                  = :(  inv($x)                            )
-@define_diffrule Base.log10(x)                = :(  inv($x) / log(10)                  )
-@define_diffrule Base.log2(x)                 = :(  inv($x) / log(2)                   )
+@define_diffrule Base.log10(x)                = :(  inv($x) / $logten      )
+@define_diffrule Base.log2(x)                 = :(  inv($x) / $logtwo      )
 @define_diffrule Base.log1p(x)                = :(  inv($x + 1)                        )
 @define_diffrule Base.exp(x)                  = :(  exp($x)                            )
-@define_diffrule Base.exp2(x)                 = :(  exp2($x) * log(2)                  )
-@define_diffrule Base.exp10(x)                = :(  exp10($x) * log(10)                )
+@define_diffrule Base.exp2(x)                 = :(  exp2($x) * $logtwo     )
+@define_diffrule Base.exp10(x)                = :(  exp10($x) * $logten    )
 @define_diffrule Base.expm1(x)                = :(  exp($x)                            )
 @define_diffrule Base.sin(x)                  = :(  cos($x)                            )
 @define_diffrule Base.cos(x)                  = :( -sin($x)                            )
@@ -25,26 +25,26 @@
 @define_diffrule Base.sec(x)                  = :(  sec($x) * tan($x)                  )
 @define_diffrule Base.csc(x)                  = :( -csc($x) * cot($x)                  )
 @define_diffrule Base.cot(x)                  = :( -(1 + cot($x)^2)                    )
-@define_diffrule Base.sind(x)                 = :(  (π / 180) * cosd($x)               )
-@define_diffrule Base.cosd(x)                 = :( -(π / 180) * sind($x)               )
-@define_diffrule Base.tand(x)                 = :(  (π / 180) * (1 + tand($x)^2)       )
-@define_diffrule Base.secd(x)                 = :(  (π / 180) * secd($x) * tand($x)    )
-@define_diffrule Base.cscd(x)                 = :( -(π / 180) * cscd($x) * cotd($x)    )
-@define_diffrule Base.cotd(x)                 = :( -(π / 180) * (1 + cotd($x)^2)       )
+@define_diffrule Base.sind(x)                 = :(  deg2rad(cosd($x))  )
+@define_diffrule Base.cosd(x)                 = :( - deg2rad(sind($x))   )
+@define_diffrule Base.tand(x)                 = :(  deg2rad(1 + tand($x)^2)  )
+@define_diffrule Base.secd(x)                 = :(  deg2rad(secd($x) * tand($x))  )
+@define_diffrule Base.cscd(x)                 = :( - deg2rad(cscd($x) * cotd($x))  )
+@define_diffrule Base.cotd(x)                 = :( - deg2rad(1 + cotd($x)^2)  )
 @define_diffrule Base.sinpi(x)                = :(  π * cospi($x)                      )
-@define_diffrule Base.cospi(x)                = :( -π * sinpi($x)                      )
+@define_diffrule Base.cospi(x)                = :( -(π * sinpi($x))                    )
 @define_diffrule Base.asin(x)                 = :(  inv(sqrt(1 - $x^2))                )
 @define_diffrule Base.acos(x)                 = :( -inv(sqrt(1 - $x^2))                )
 @define_diffrule Base.atan(x)                 = :(  inv(1 + $x^2)                      )
 @define_diffrule Base.asec(x)                 = :(  inv(abs($x) * sqrt($x^2 - 1))      )
 @define_diffrule Base.acsc(x)                 = :( -inv(abs($x) * sqrt($x^2 - 1))      )
 @define_diffrule Base.acot(x)                 = :( -inv(1 + $x^2)                      )
-@define_diffrule Base.asind(x)                = :(  180 / π / sqrt(1 - $x^2)           )
-@define_diffrule Base.acosd(x)                = :( -180 / π / sqrt(1 - $x^2)           )
-@define_diffrule Base.atand(x)                = :(  180 / π / (1 + $x^2)               )
-@define_diffrule Base.asecd(x)                = :(  180 / π / abs($x) / sqrt($x^2 - 1) )
-@define_diffrule Base.acscd(x)                = :( -180 / π / abs($x) / sqrt($x^2 - 1) )
-@define_diffrule Base.acotd(x)                = :( -180 / π / (1 + $x^2)               )
+@define_diffrule Base.asind(x)                = :(  inv(deg2rad(sqrt(1 - $x^2)))  )
+@define_diffrule Base.acosd(x)                = :(  -inv(deg2rad(sqrt(1 - $x^2)))  )
+@define_diffrule Base.atand(x)                = :(  inv(deg2rad(1 + $x^2))  )
+@define_diffrule Base.asecd(x)                = :(  inv(deg2rad(abs($x) * sqrt($x^2 - 1)))  )
+@define_diffrule Base.acscd(x)                = :(  -inv(deg2rad(abs($x) * sqrt($x^2 - 1)))  )
+@define_diffrule Base.acotd(x)                = :(  -inv(deg2rad(1 + $x^2))  )
 @define_diffrule Base.sinh(x)                 = :(  cosh($x)                           )
 @define_diffrule Base.cosh(x)                 = :(  sinh($x)                           )
 @define_diffrule Base.tanh(x)                 = :(  1 - tanh($x)^2                     )
@@ -58,16 +58,15 @@
 @define_diffrule Base.acsch(x)                = :( -inv(abs($x) * sqrt(1 + $x^2))      )
 @define_diffrule Base.acoth(x)                = :(  inv(1 - $x^2)                      )
 @define_diffrule Base.sinc(x)                 = :(  cosc($x)                           )
-@define_diffrule Base.deg2rad(x)              = :(  π / 180                            )
-@define_diffrule Base.mod2pi(x)               = :(  isinteger($x / 2pi) ? NaN : 1      )
-@define_diffrule Base.rad2deg(x)              = :(  180 / π                            )
-
+@define_diffrule Base.deg2rad(x)              = :(   deg2rad(one($x))  )
+@define_diffrule Base.mod2pi(x)               = :(  isinteger($x / $twoπ) ? oftype(float($x), NaN) : one(float($x)) )
+@define_diffrule Base.rad2deg(x)              = :(  rad2deg(one($x))  )
 @define_diffrule SpecialFunctions.gamma(x) =
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
 @define_diffrule SpecialFunctions.loggamma(x) =
     :(  SpecialFunctions.digamma($x)  )
 
-@define_diffrule Base.abs(x)                  = :( DiffRules._abs_deriv($x)            )
+@define_diffrule Base.abs(x)                  = :( $(_abs_deriv)($x)            )
 
 # We provide this hook for special number types like `Interval`
 # that need their own special definition of `abs`.
@@ -88,8 +87,8 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule Base.log(b, x)    = :( log($x) * inv(-log($b)^2 * $b)                          ), :( inv($x) / log($b)                                                       )
 @define_diffrule Base.ldexp(x, y)  = :( exp2($y)                                                ), :NaN
 
-@define_diffrule Base.mod(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -floor(z)), NaN)) )
-@define_diffrule Base.rem(x, y)    = :( first(promote(ifelse(isinteger($x / $y), NaN, 1), NaN)) ), :(  z = $x / $y; first(promote(ifelse(isinteger(z), NaN, -trunc(z)), NaN)) )
+@define_diffrule Base.mod(x, y)    = :( z = $x / $y; ifelse(isinteger(z), oftype(float(z), NaN), one(float(z))) ), :(  z = $x / $y; ifelse(isinteger(z), oftype(float(z), NaN), -floor(float(z))) )
+@define_diffrule Base.rem(x, y)    = :( z = $x / $y; ifelse(isinteger(z), oftype(float(z), NaN), one(float(z))) ), :(  z = $x / $y; ifelse(isinteger(z), oftype(float(z), NaN), -trunc(float(z))) )
 @define_diffrule Base.rem2pi(x, r) = :( 1                                                       ), :NaN
 @define_diffrule Base.max(x, y)    = :( $x > $y ? one($x) : zero($x)                            ), :( $x > $y ? zero($y) : one($y)                                            )
 @define_diffrule Base.min(x, y)    = :( $x > $y ? zero($x) : one($x)                            ), :( $x > $y ? one($y) : zero($y)                                            )
@@ -113,19 +112,20 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 # unary #
 #-------#
 
-@define_diffrule SpecialFunctions.erf(x)         = :(  (2 / sqrt(π)) * exp(-$x * $x)       )
+@define_diffrule SpecialFunctions.erf(x)         = :(  2 * ($invsqrtπ * exp(-$x^2))       )
 @define_diffrule SpecialFunctions.erfinv(x)      =
-    :(  (sqrt(π) / 2) * exp(SpecialFunctions.erfinv($x)^2)  )
-@define_diffrule SpecialFunctions.erfc(x)        = :( -(2 / sqrt(π)) * exp(-$x * $x)       )
+    :(  ($sqrtπ * exp(SpecialFunctions.erfinv($x)^2)) / 2  )
+@define_diffrule SpecialFunctions.erfc(x)        = :( -($invsqrtπ * exp(-$x^2) * 2)       )
 @define_diffrule SpecialFunctions.logerfc(x)     =
-    :( -(2 * exp(- $x^2 - SpecialFunctions.logerfc($x))) / sqrt(π) )
+    :( - 2 * ($invsqrtπ * exp(- $x^2 - SpecialFunctions.logerfc($x))) )
+
 @define_diffrule SpecialFunctions.erfcinv(x)     =
-    :( -(sqrt(π) / 2) * exp(SpecialFunctions.erfcinv($x)^2)  )
-@define_diffrule SpecialFunctions.erfi(x)        = :(  (2 / sqrt(π)) * exp($x * $x)        )
+    :( -($sqrtπ * exp(SpecialFunctions.erfcinv($x)^2)) / 2  )
+@define_diffrule SpecialFunctions.erfi(x)        = :(  $invsqrtπ * exp($x^2) * 2        )
 @define_diffrule SpecialFunctions.erfcx(x)       =
-    :(  (2 * $x * SpecialFunctions.erfcx($x)) - (2 / sqrt(π))  )
+    :(  2 * (($x * SpecialFunctions.erfcx($x)) - $invsqrtπ)  )
 @define_diffrule SpecialFunctions.logerfcx(x) =
-    :(  2 * ($x - inv(SpecialFunctions.erfcx($x) * sqrt(π)))  )
+    :(  2 * ($x - inv(SpecialFunctions.erfcx($x) * $sqrtπ))  )
 
 @define_diffrule SpecialFunctions.dawson(x)      =
     :(  1 - (2 * $x * SpecialFunctions.dawson($x))  )
@@ -190,7 +190,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 #--------#
 
 @define_diffrule SpecialFunctions.erf(x, y) =
-    :(  -2 / sqrt(π) * exp(-$x^2)  ), :(  2 / sqrt(π) * exp(-$y^2)  )
+    :(  -2 * ($invsqrtπ * exp(-$x^2))  ), :(  2 * ($invsqrtπ * exp(-$y^2))  )
 
 # derivatives with respect to the order `ν` exist but are not implemented
 # (analogously to the ChainRules definitions in SpecialFunctions)
@@ -264,8 +264,8 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule NaNMath.acosh(x)  = :(  inv(NaNMath.sqrt(NaNMath.pow($x, 2) - 1))  )
 @define_diffrule NaNMath.atanh(x)  = :(  inv(1 - NaNMath.pow($x, 2))                )
 @define_diffrule NaNMath.log(x)    = :(  inv($x)                                    )
-@define_diffrule NaNMath.log2(x)   = :(  inv($x) / NaNMath.log(2)                   )
-@define_diffrule NaNMath.log10(x)  = :(  inv($x) / NaNMath.log(10)                  )
+@define_diffrule NaNMath.log2(x)   = :(  inv($logtwo * $x)                          )
+@define_diffrule NaNMath.log10(x)  = :(  inv($logten * $x)                          )
 @define_diffrule NaNMath.log1p(x)  = :(  inv($x + 1)                                )
 @define_diffrule NaNMath.lgamma(x) = :(  SpecialFunctions.digamma($x)               )
 
