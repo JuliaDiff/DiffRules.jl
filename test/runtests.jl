@@ -75,11 +75,7 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
 
                         # Check type, if applicable.
                         if foo isa AbstractFloat
-                            if dx isa Complex
-                                @test dx isa Complex{$T}
-                            else
-                                @test dx isa $T
-                            end
+                            @test promote_type(typeof(real(dx)), $T) === $T
                         end
                     end
                     if !(isnan(dy))
@@ -87,11 +83,7 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
 
                         # Check type, if applicable.
                         if bar isa AbstractFloat
-                            if dy isa Complex
-                                @test dy isa Complex{$T}
-                            else
-                                @test dy isa $T
-                            end
+                            @test promote_type(typeof(real(dy)), $T) === $T
                         end
                     end
                 end
