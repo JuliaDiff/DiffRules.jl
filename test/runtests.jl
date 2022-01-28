@@ -74,17 +74,13 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                         @test dx ≈ finitediff(z -> $M.$f(z, bar), foo) rtol=1e-2 atol=1e-3
 
                         # Check type, if applicable.
-                        if foo isa AbstractFloat
-                            @test promote_type(typeof(real(dx)), $T) === $T
-                        end
+                        @test promote_type(typeof(real(dx)), $T) === $T
                     end
                     if !(isnan(dy))
                         @test dy ≈ finitediff(z -> $M.$f(foo, z), bar) rtol=1e-2 atol=1e-3
 
                         # Check type, if applicable.
-                        if bar isa AbstractFloat
-                            @test promote_type(typeof(real(dy)), $T) === $T
-                        end
+                        @test promote_type(typeof(real(dy)), $T) === $T
                     end
                 end
             end
