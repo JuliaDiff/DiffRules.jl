@@ -1,5 +1,4 @@
 using DiffRules
-using FiniteDifferences
 using Test
 using FiniteDifferences
 
