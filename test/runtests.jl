@@ -40,7 +40,7 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                     # We're happy with types with the correct promotion behavior, e.g.
                     # it's fine to return `1` as a derivative despite input being `Float64`.
                     @test promote_type(typeof($deriv), $T) === $T
-                    if $(f in (:log1pmx, :logmxp1) && T == Float32
+                    if $(f in (:log1pmx, :logmxp1)) && T == Float32
                         @test_throws MethodError $deriv ≈ finitediff($M.$f, goo) rtol=1e-2 atol=1e-3
                     else
                         @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-2 atol=1e-3     
