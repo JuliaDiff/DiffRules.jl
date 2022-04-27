@@ -244,6 +244,8 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 @define_diffrule LogExpFunctions.log1mexp(x) = :(-exp($x - LogExpFunctions.log1mexp($x)))
 @define_diffrule LogExpFunctions.log2mexp(x) = :(-exp($x - LogExpFunctions.log2mexp($x)))
 @define_diffrule LogExpFunctions.logexpm1(x) = :(exp($x - LogExpFunctions.logexpm1($x)))
+@define_diffrule LogExpFunctions.log1pmx(x) = :(-$x / (1 + $x))
+@define_diffrule LogExpFunctions.logmxp1(x) = :(inv($x) - 1)
 
 # binary
 @define_diffrule LogExpFunctions.xlogy(x, y) = :(log($y)), :($x / $y)
