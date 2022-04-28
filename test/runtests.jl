@@ -27,7 +27,7 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                     goo = if $(f in (:asec, :acsc, :asecd, :acscd, :acosh, :acoth))
                         # avoid singularities with finite differencing
                         rand($T) + $T(1.5)
-                    elseif $(f in (:log, :airyaix, :airyaiprimex))
+                    elseif $(f in (:log, :airyaix, :airyaiprimex, :logmxp1))
                         # avoid singularities with finite differencing
                         rand($T) + $T(0.5)
                     elseif $(f === :log1mexp)
