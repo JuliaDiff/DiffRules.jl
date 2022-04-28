@@ -41,6 +41,8 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                     # it's fine to return `1` as a derivative despite input being `Float64`.
                     @test promote_type(typeof($deriv), $T) === $T
                     if $(f in (:log1pmx, :logmxp1)) && $T == Float32
+                        # These two functions currently don't have fallbacks for `Real`
+                        # arguments, nor optimized implementations for `Float32`
                         @test_throws MethodError finitediff($M.$f, goo)
                     else
                         @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-2 atol=1e-3     
