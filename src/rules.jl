@@ -65,6 +65,8 @@
     :(  SpecialFunctions.digamma($x) * SpecialFunctions.gamma($x)  )
 @define_diffrule SpecialFunctions.loggamma(x) =
     :(  SpecialFunctions.digamma($x)  )
+@define_diffrule SpecialFunctions.logabsgamma(x) =
+    :(  SpecialFunctions.digamma($x)  ), :false
 
 @define_diffrule Base.abs(x)                  = :( $(_abs_deriv)($x)            )
 
