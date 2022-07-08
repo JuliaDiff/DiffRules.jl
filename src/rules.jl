@@ -259,4 +259,4 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 
 @define_diffrule LogExpFunctions.xlog1py(x, y) = 
     :(log1p($y)),
-    :(yp1 = 1 + $y; z = $x / yp1; iszero($x) && !isnan($y) ? zero(z) : iszero(yp1) ? oftype(z, NaN) : z)
+    :(z = $x / (1 + $y); iszero($x) && !isnan($y) ? zero(z) : z)
