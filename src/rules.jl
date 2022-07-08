@@ -250,7 +250,7 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 # binary
 @define_diffrule LogExpFunctions.xlogy(x, y) = 
     :(log($y)),
-    :(z = $x / $y; iszero($x) && !isnan($y) ? zero(z) : iszero($y) ? oftype(z, NaN) : z)
+    :(z = $x / $y; iszero($x) && !isnan($y) ? zero(z) : z)
 @define_diffrule LogExpFunctions.logaddexp(x, y) =
     :(exp($x - LogExpFunctions.logaddexp($x, $y))), :(exp($y - LogExpFunctions.logaddexp($x, $y)))
 @define_diffrule LogExpFunctions.logsubexp(x, y) =
