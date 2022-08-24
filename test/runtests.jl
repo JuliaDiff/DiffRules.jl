@@ -141,6 +141,40 @@ for xtype in [:Float64, :BigFloat]
     end
 end
 
+# Test `iszero(x)` branch of `xlogy`
+derivs = DiffRules.diffrule(:LogExpFunctions, :xlogy, :x, :y)
+for xytype in [:Float32, :Float64, :BigFloat]
+    @eval begin
+        let
+            x = zero($xytype)
+            y = rand($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test iszero(dy)
+
+            y = one($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test iszero(dy)
+        end
+    end
+end
+
+# Test `iszero(x)` branch of `xlog1py`
+derivs = DiffRules.diffrule(:LogExpFunctions, :xlog1py, :x, :y)
+for xytype in [:Float32, :Float64, :BigFloat]
+    @eval begin
+        let
+            x = zero($xytype)
+            y = rand($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test iszero(dy)
+
+            y = -one($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test iszero(dy)
+        end
+    end
+end
+
 end
 
     @testset "diffrules" begin
