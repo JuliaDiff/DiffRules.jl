@@ -28,7 +28,6 @@ jobs:
           - {user: JuliaDiff, repo: ReverseDiff.jl, group: All}
           - {user: FluxML, repo: Tracker.jl, group: All}
           - {user: FluxML, repo: Zygote.jl, group: All}
-          - {user: invenia, repo: Nabla.jl, group: All}
           - {user: JuliaSymbolics, repo: Symbolics.jl, group: All}
           - {user: SciML, repo: ModelingToolkit.jl, group: All}
           - {user: PSORLab, repo: EAGO.jl, group: All}
