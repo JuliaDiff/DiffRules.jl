@@ -118,7 +118,7 @@ for xtype in [:Float64, :BigFloat, :Int64]
                 x = $xtype(rand(1 : 10))
                 y = $mode
                 dx, dy = $(derivs[1]), $(derivs[2])
-                @test isapprox(dx, finitediff(z -> rem2pi(z, y), float(x)), rtol=0.05)
+                @test dx ≈ finitediff(z -> rem2pi(z, y), float(x)) rtol=1e-9 atol=1e-9
                 @test isnan(dy)
             end
         end
@@ -134,9 +134,20 @@ for xtype in [:Float64, :BigFloat]
                 x = rand($xtype)
                 y = $ytype(rand(1 : 10))
                 dx, dy = $(derivs[1]), $(derivs[2])
-                @test isapprox(dx, finitediff(z -> ldexp(z, y), x), rtol=0.05)
+                @test dx ≈ finitediff(z -> ldexp(z, y), x) rtol=1e-9 atol=1e-9
                 @test isnan(dy)
             end
+        end
+    end
+end
+
+# Check negative branch for `airybix` and `airybiprimex`
+for f in (:airybix, :airybiprimex)
+    deriv = DiffRules.diffrule(:SpecialFunctions, f, :goo)
+    @eval begin
+        let
+            goo = -rand()
+            @test $deriv ≈ finitediff(SpecialFunctions.$f, goo) rtol=1e-9 atol=1e-9
         end
     end
 end
