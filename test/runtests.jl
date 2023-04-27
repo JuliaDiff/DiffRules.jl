@@ -211,12 +211,14 @@ end
 derivs = DiffRules.diffrule(:Base, :ifelse, :foo, :bar, :goo)
 for cond in (true, false)
     @eval begin
-        foo = $cond
-        bar, gee = randn(2)
-        dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
-        @test isapprox(dy, finitediff(y -> ifelse(foo, y, goo), bar), rtol=0.05)
-        @test isapprox(dz, finitediff(z -> ifelse(foo, bar, z), goo), rtol=0.05)
-        @test isnan(dx)
+        let
+            foo = $cond
+            bar, goo = randn(2)
+            dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
+            @test isnan(dx)
+            @test dy ≈ finitediff(y -> ifelse(foo, y, goo), bar) rtol=0.05
+            @test dz ≈ finitediff(z -> ifelse(foo, bar, z), goo) rtol=0.05
+        end
     end
 end
 
