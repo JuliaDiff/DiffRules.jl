@@ -88,23 +88,29 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                 end
             end
         elseif arity == 3
-            #=
             @test DiffRules.hasdiffrule(M, f, 3)
             derivs = DiffRules.diffrule(M, f, :foo, :bar, :goo)
             @eval begin
-                foo, bar, goo = randn(3)
-                dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
-                if !(isnan(dx))
-                    @test isapprox(dx, finitediff(x -> $M.$f(x, bar, goo), foo), rtol=0.05)
-                end
-                if !(isnan(dy))
-                    @test isapprox(dy, finitediff(y -> $M.$f(foo, y, goo), bar), rtol=0.05)
-                end
-                if !(isnan(dz))
-                    @test isapprox(dz, finitediff(z -> $M.$f(foo, bar, z), goo), rtol=0.05)
+                let
+                    foo, bar, goo = randn($T, 3)
+                    dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
+                    if !isnan(dx)
+                        @test dx ≈ finitediff(x -> $M.$f(x, bar, goo), foo) rtol=1e-2
+                        # Check type, if applicable.
+                        @test promote_type(typeof(real(dx)), $T) === $T
+                    end
+                    if !isnan(dy)
+                        @test dy ≈ finitediff(y -> $M.$f(foo, y, goo), bar) rtol=1e-2
+                        # Check type, if applicable.
+                        @test promote_type(typeof(real(dy)), $T) === $T
+                    end
+                    if !isnan(dz)
+                        @test dz ≈ finitediff(z -> $M.$f(foo, bar, z), goo) rtol=1e-2
+                        # Check type, if applicable.
+                        @test promote_type(typeof(real(dz)), $T) === $T
+                    end
                 end
             end
-            =#
         end
     end
 end
@@ -201,16 +207,18 @@ end
 end
 
 # Test ifelse separately as first argument is boolean
-#=
 @test DiffRules.hasdiffrule(:Base, :ifelse, 3)
 derivs = DiffRules.diffrule(:Base, :ifelse, :foo, :bar, :goo)
-for cond in [true, false]
+for cond in (true, false)
     @eval begin
-        foo = $cond
-        bar, gee = randn(2)
-        dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
-        @test isapprox(dy, finitediff(y -> ifelse(foo, y, goo), bar), rtol=0.05)
-        @test isapprox(dz, finitediff(z -> ifelse(foo, bar, z), goo), rtol=0.05)
+        let
+            foo = $cond
+            bar, goo = randn(2)
+            dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
+            @test isnan(dx)
+            @test dy ≈ finitediff(y -> ifelse(foo, y, goo), bar) rtol=1e-2 atol=1e-9
+            @test dz ≈ finitediff(z -> ifelse(foo, bar, z), goo) rtol=1e-2 atol=1e-9
+        end
     end
 end
-=#
+
