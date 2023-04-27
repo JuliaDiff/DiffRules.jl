@@ -95,17 +95,17 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                     foo, bar, goo = randn($T, 3)
                     dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
                     if !isnan(dx)
-                        @test dx ≈ finitediff(x -> $M.$f(x, bar, goo), foo) rtol=0.05
+                        @test dx ≈ finitediff(x -> $M.$f(x, bar, goo), foo) rtol=1e-2
                         # Check type, if applicable.
                         @test promote_type(typeof(real(dx)), $T) === $T
                     end
                     if !isnan(dy)
-                        @test dy ≈ finitediff(y -> $M.$f(foo, y, goo), bar) rtol=0.05
+                        @test dy ≈ finitediff(y -> $M.$f(foo, y, goo), bar) rtol=1e-2
                         # Check type, if applicable.
                         @test promote_type(typeof(real(dy)), $T) === $T
                     end
                     if !isnan(dz)
-                        @test dz ≈ finitediff(z -> $M.$f(foo, bar, z), goo) rtol=0.05
+                        @test dz ≈ finitediff(z -> $M.$f(foo, bar, z), goo) rtol=1e-2
                         # Check type, if applicable.
                         @test promote_type(typeof(real(dz)), $T) === $T
                     end
@@ -216,8 +216,8 @@ for cond in (true, false)
             bar, goo = randn(2)
             dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
             @test isnan(dx)
-            @test dy ≈ finitediff(y -> ifelse(foo, y, goo), bar) rtol=0.05
-            @test dz ≈ finitediff(z -> ifelse(foo, bar, z), goo) rtol=0.05
+            @test dy ≈ finitediff(y -> ifelse(foo, y, goo), bar) rtol=1e-2 atol=1e-9
+            @test dz ≈ finitediff(z -> ifelse(foo, bar, z), goo) rtol=1e-2 atol=1e-9
         end
     end
 end
