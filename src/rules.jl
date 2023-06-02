@@ -70,7 +70,7 @@
 
 # We provide this hook for special number types like `Interval`
 # that need their own special definition of `abs`.
-_abs_deriv(x) = signbit(x) ? -one(x) : one(x)
+_abs_deriv(x) = sign(x)
 
 # binary #
 #--------#
