@@ -181,6 +181,8 @@ _abs_deriv(x) = sign(x)
 @define_diffrule SpecialFunctions.ellipe(m) =
     :( (SpecialFunctions.ellipe($m) - SpecialFunctions.ellipk($m)) / (2 * $m) )
 
+@define_diffrule SpecialFunctions.expint(x)    = :( -exp(-$x) / $x )
+
 # TODO:
 #
 # eta
@@ -235,6 +237,10 @@ _abs_deriv(x) = sign(x)
     :( SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)) ), :(  SpecialFunctions.beta($a, $b)*(SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b))     )
 @define_diffrule SpecialFunctions.logbeta(a, b)   =
     :( SpecialFunctions.digamma($a) - SpecialFunctions.digamma($a + $b)  ), :(  SpecialFunctions.digamma($b) - SpecialFunctions.digamma($a + $b)  )
+
+# derivative wrt to `ν` is not implemented
+@define_diffrule SpecialFunctions.expint(ν, x)    = 
+    :NaN, :( -SpecialFunctions.expint($ν - 1, $x) )
 
 # derivative wrt to `s` is not implemented
 @define_diffrule SpecialFunctions.zeta(s, z)      =
