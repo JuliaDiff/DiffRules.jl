@@ -1,6 +1,6 @@
 name = "DiffRules"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
-version = "1.15.0"
+version = "1.15.1"
 
 [deps]
 IrrationalConstants = "92d709cd-6900-40b7-9082-c6be49f344b6"
