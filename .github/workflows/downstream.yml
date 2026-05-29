@@ -33,10 +33,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v1
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.julia-version }}
-          arch: x64
       - uses: julia-actions/julia-buildpkg@latest
       - name: Clone Downstream
         uses: actions/checkout@v6
