@@ -55,4 +55,4 @@ jobs:
       - uses: codecov/codecov-action@v6
         continue-on-error: true
         with:
-          file: lcov.info
+          files: lcov.info
