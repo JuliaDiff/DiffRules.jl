@@ -13,6 +13,20 @@ Note that DiffRules is *not* a fully-fledged symbolic differentiation tool. It i
 simple global database of common derivative definitions, and was developed with the goal of
 improving derivative coverage in downstream tools.
 
+Rules for SpecialFunctions, NaNMath and LogExpFunctions live in package extensions, so
+DiffRules itself depends on none of them. Load the package you need alongside DiffRules to
+get its rules:
+
+```julia
+using DiffRules, SpecialFunctions
+
+DiffRules.hasdiffrule(SpecialFunctions.erf, 1)  # true
+```
+
+Without `using SpecialFunctions`, that query returns `false` and `diffrules()` does not list
+its rules. Packages generating code from `diffrules()` should therefore load the packages
+whose rules they want, and skip rules for modules they do not have in scope.
+
 ```@docs
 DiffRules.@define_diffrule
 DiffRules.diffrule

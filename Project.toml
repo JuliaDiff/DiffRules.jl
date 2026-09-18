@@ -4,16 +4,22 @@ version = "1.17.0-dev"
 
 [deps]
 IrrationalConstants = "92d709cd-6900-40b7-9082-c6be49f344b6"
+
+[weakdeps]
 LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+
+[extensions]
+DiffRulesLogExpFunctionsExt = "LogExpFunctions"
+DiffRulesNaNMathExt = "NaNMath"
+DiffRulesNaNMathSpecialFunctionsExt = ["NaNMath", "SpecialFunctions"]
+DiffRulesSpecialFunctionsExt = "SpecialFunctions"
 
 [compat]
 IrrationalConstants = "0.1.1, 0.2"
 LogExpFunctions = "0.3.2, 1"
 NaNMath = "0.3, 1"
-Random = "1"
 SpecialFunctions = "1.1, 2"
 julia = "1.10"
 

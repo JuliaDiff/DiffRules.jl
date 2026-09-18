@@ -12,6 +12,9 @@ Random.seed!(1)
 const finitediff = central_fdm(5, 1, max_range=1e-3)
 
 @testset "DiffRules" begin
+include("registry.jl")
+include("precompilation.jl")
+
 @testset "check rules" begin
 
 non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, :ifelse, 3)]
