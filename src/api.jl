@@ -16,12 +16,17 @@ Note that differentiation rules are purely symbolic, so no type annotations shou
 Each rule is a method of [`diffrule`](@ref), so rules defined in other packages and in
 package extensions are precompiled and visible like any other method.
 
+A rule is evaluated by whoever asks for it, which need not have the defining package in
+scope. Interpolate the functions the RHS calls, rather than naming them, so that the
+returned expression stands on its own.
+
 # Examples
 
 ```julia
-@define_diffrule Base.cos(x)          = :(-sin(\$x))
-@define_diffrule Base.:/(x, y)        = :(inv(\$y)), :(-\$x / (\$y^2))
-@define_diffrule Base.polygamma(m, x) = :NaN,       :(polygamma(\$m + 1, \$x))
+@define_diffrule Base.cos(x)      = :(-sin(\$x))
+@define_diffrule Base.:/(x, y)    = :(inv(\$y)), :(-\$x / (\$y^2))
+@define_diffrule Base.ldexp(x, y) = :(exp2(\$y)), :NaN
+@define_diffrule MyPkg.f(x)       = :(\$(MyPkg.g)(\$x))
 ```
 """
 macro define_diffrule(def)
@@ -44,6 +49,9 @@ interpolated into the returned expression.
 In the `n`-ary case, an `n`-tuple of expressions will be returned where the `i`th expression
 is the derivative of `f` w.r.t the `i`th argument.
 
+Throw a `KeyError` if `M.f` cannot be resolved, which for a package's functions is also the
+case as long as that package is not loaded.
+
 # Examples
 
 ```jldoctest
@@ -59,7 +67,10 @@ julia> DiffRules.diffrule(:Base, :sin, :(x * y^2))
 """
 function diffrule end
 
-diffrule(M::Module, f::Symbol, args...) = diffrule(getproperty(M, f), args...)
+function diffrule(M::Module, f::Symbol, args...)
+    isdefined(M, f) || throw(KeyError((nameof(M), f, length(args))))
+    return diffrule(getproperty(M, f), args...)
+end
 
 function diffrule(M::Symbol, f::Symbol, args...)
     fn = _resolve(M, f)
@@ -168,21 +179,31 @@ _pkgname(fn) = nameof(Base.moduleroot(parentmodule(fn)))
 
 # Rules are the methods of `diffrule` whose first parameter is a singleton function type.
 # The `Symbol`/`Module` methods above are not, and are skipped.
+function _rule(m::Method)
+    m.isva && return nothing
+    params = Base.unwrap_unionall(m.sig).parameters
+    length(params) >= 2 || return nothing
+    T = params[2]
+    T isa DataType && T <: Function && isdefined(T, :instance) || return nothing
+    return (T.instance, length(params) - 2)
+end
+
 function _rules()
     rules = Tuple{Function,Int}[]
     for m in methods(diffrule)
-        m.isva && continue
-        params = Base.unwrap_unionall(m.sig).parameters
-        length(params) >= 2 || continue
-        T = params[2]
-        T isa DataType && T <: Function && isdefined(T, :instance) || continue
-        push!(rules, (T.instance, length(params) - 2))
+        rule = _rule(m)
+        rule === nothing || push!(rules, rule)
     end
     return rules
 end
 
+# Downstream packages resolve every rule by name while precompiling, so scan the method table
+# directly instead of building the full list first.
 function _resolve(M::Symbol, f::Symbol)
-    for (fn, _) in _rules()
+    for m in methods(diffrule)
+        rule = _rule(m)
+        rule === nothing && continue
+        fn = rule[1]
         nameof(fn) === f && _pkgname(fn) === M && return fn
     end
     return nothing
