@@ -11,10 +11,10 @@ NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [extensions]
-DiffRulesLogExpFunctionsExt = "LogExpFunctions"
-DiffRulesNaNMathExt = "NaNMath"
-DiffRulesNaNMathSpecialFunctionsExt = ["NaNMath", "SpecialFunctions"]
-DiffRulesSpecialFunctionsExt = "SpecialFunctions"
+LogExpFunctionsExt = "LogExpFunctions"
+NaNMathExt = "NaNMath"
+NaNMathSpecialFunctionsExt = ["NaNMath", "SpecialFunctions"]
+SpecialFunctionsExt = "SpecialFunctions"
 
 [compat]
 IrrationalConstants = "0.1.1, 0.2"
