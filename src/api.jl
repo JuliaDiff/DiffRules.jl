@@ -1,13 +1,10 @@
-
-const DEFINED_DIFFRULES = Dict{Tuple{Union{Expr,Symbol},Symbol,Int},Any}()
-
 """
     @define_diffrule M.f(x) = :(df_dx(\$x))
     @define_diffrule M.f(x, y) = :(df_dx(\$x, \$y)), :(df_dy(\$x, \$y))
     ⋮
 
 Define a new differentiation rule for the function `M.f` and the given arguments, which should
-be treated as bindings to Julia expressions. Return the defined rule's key.
+be treated as bindings to Julia expressions.
 
 The LHS should be a function call with a non-splatted argument list, and the RHS should be
 the derivative expression, or in the `n`-ary case, an `n`-tuple of expressions where the
@@ -16,84 +13,103 @@ interpolated wherever they are used on the RHS.
 
 Note that differentiation rules are purely symbolic, so no type annotations should be used.
 
+Each rule is a method of [`diffrule`](@ref), so rules defined in other packages and in
+package extensions are precompiled and visible like any other method.
+
+A rule is evaluated by whoever asks for it, which need not have the defining package in
+scope. Interpolate the functions the RHS calls, rather than naming them, so that the
+returned expression stands on its own.
+
 # Examples
 
 ```julia
-@define_diffrule Base.cos(x)          = :(-sin(\$x))
-@define_diffrule Base.:/(x, y)        = :(inv(\$y)), :(-\$x / (\$y^2))
-@define_diffrule Base.polygamma(m, x) = :NaN,       :(polygamma(\$m + 1, \$x))
+@define_diffrule Base.cos(x)      = :(-sin(\$x))
+@define_diffrule Base.:/(x, y)    = :(inv(\$y)), :(-\$x / (\$y^2))
+@define_diffrule Base.ldexp(x, y) = :(exp2(\$y)), :NaN
+@define_diffrule MyPkg.f(x)       = :(\$(MyPkg.g)(\$x))
 ```
 """
 macro define_diffrule(def)
     @assert isa(def, Expr) && def.head == :(=) "Diff rule expression does not have a left and right side"
-    lhs = def.args[1]
-    rhs = def.args[2]
+    lhs, rhs = def.args
     @assert isa(lhs, Expr) && lhs.head == :call "LHS is not a function call"
-    qualified_f = lhs.args[1]
-    @assert isa(qualified_f, Expr) && qualified_f.head == :(.) "Function is not qualified by module"
-    M = qualified_f.args[1]
-    f = _get_quoted_symbol(qualified_f.args[2])
+    f = lhs.args[1]
+    @assert isa(f, Expr) && f.head == :(.) "Function is not qualified by module"
     args = lhs.args[2:end]
-    rule = Expr(:->, Expr(:tuple, args...), rhs)
-    key = Expr(:tuple, Expr(:quote, M), Expr(:quote, f), length(args))
-    return esc(quote
-        $DiffRules.DEFINED_DIFFRULES[$key] = $rule
-        $key
-    end)
+    return esc(:($DiffRules.diffrule(::typeof($f), $(args...)) = $rhs))
 end
 
 """
-    diffrule(M::Union{Expr,Symbol}, f::Symbol, args...)
+    diffrule(f, args...)
+    diffrule(M::Union{Module,Symbol}, f::Symbol, args...)
 
-Return the derivative expression for `M.f` at the given argument(s), with the argument(s)
+Return the derivative expression for `f` at the given argument(s), with the argument(s)
 interpolated into the returned expression.
 
 In the `n`-ary case, an `n`-tuple of expressions will be returned where the `i`th expression
 is the derivative of `f` w.r.t the `i`th argument.
 
+Throw a `KeyError` if `M.f` cannot be resolved, which for a package's functions is also the
+case as long as that package is not loaded.
+
 # Examples
 
 ```jldoctest
-julia> DiffRules.diffrule(:Base, :sin, 1)
+julia> DiffRules.diffrule(sin, 1)
 :(cos(1))
 
-julia> DiffRules.diffrule(:Base, :sin, :x)
+julia> DiffRules.diffrule(Base, :sin, :x)
 :(cos(x))
 
 julia> DiffRules.diffrule(:Base, :sin, :(x * y^2))
 :(cos(x * y ^ 2))
 ```
 """
-diffrule(M::Union{Expr,Symbol}, f::Symbol, args...) = DEFINED_DIFFRULES[M,f,length(args)](args...)
+function diffrule end
+
+function diffrule(M::Module, f::Symbol, args...)
+    isdefined(M, f) || throw(KeyError((nameof(M), f, length(args))))
+    return diffrule(getproperty(M, f), args...)
+end
+
+function diffrule(M::Symbol, f::Symbol, args...)
+    fn = _resolve(M, f)
+    fn === nothing && throw(KeyError((M, f, length(args))))
+    return diffrule(fn, args...)
+end
 
 """
-    hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int)
+    hasdiffrule(f, arity::Int)
+    hasdiffrule(M::Union{Module,Symbol}, f::Symbol, arity::Int)
 
-Return `true` if a differentiation rule is defined for `M.f` and `arity`, or return `false`
-otherwise.
+Return `true` if a differentiation rule is defined for `f` and `arity`, or return `false`
+otherwise. Here, `arity` refers to the number of arguments accepted by `f`.
 
-Here, `arity` refers to the number of arguments accepted by `f`.
+Rules for a package's functions exist only once that package is loaded, so a query for an
+unloaded package returns `false`.
 
 # Examples
 
 ```jldoctest
-julia> DiffRules.hasdiffrule(:Base, :sin, 1)
+julia> DiffRules.hasdiffrule(sin, 1)
 true
 
-julia> DiffRules.hasdiffrule(:Base, :sin, 2)
+julia> DiffRules.hasdiffrule(sin, 2)
 false
-
-julia> DiffRules.hasdiffrule(:Base, :-, 1)
-true
 
 julia> DiffRules.hasdiffrule(:Base, :-, 2)
 true
-
-julia> DiffRules.hasdiffrule(:Base, :-, 3)
-false
 ```
 """
-hasdiffrule(M::Union{Expr,Symbol}, f::Symbol, arity::Int) = haskey(DEFINED_DIFFRULES, (M, f, arity))
+hasdiffrule(f, arity::Int) = hasmethod(diffrule, Tuple{typeof(f),Vararg{Any,arity}})
+
+hasdiffrule(M::Module, f::Symbol, arity::Int) =
+    isdefined(M, f) && hasdiffrule(getproperty(M, f), arity)
+
+function hasdiffrule(M::Symbol, f::Symbol, arity::Int)
+    fn = _resolve(M, f)
+    return fn !== nothing && hasdiffrule(fn, arity)
+end
 
 # show a deprecation warning if `filter_modules` in `diffrules()` is specified implicitly
 # we use a custom singleton to figure out if the keyword argument was set explicitly
@@ -119,13 +135,14 @@ end
     diffrules(; filter_modules=(:Base, :SpecialFunctions, :NaNMath))
 
 Return a list of keys that can be used to access all defined differentiation rules for
-modules in `filter_modules`.
+modules in `filter_modules`. To include all rules, specify `filter_modules = nothing`.
 
-Each key is of the form `(M::Symbol, f::Symbol, arity::Int)`.
-Here, `arity` refers to the number of arguments accepted by `f` and `M` is one of the
-modules in `filter_modules`.
+Each key is of the form `(M::Symbol, f::Symbol, arity::Int)`, where `M` is the name of the
+package defining `f` and `arity` is the number of arguments accepted by `f`.
 
-To include all rules, specify `filter_modules = nothing`.
+Keys are collected from the method table of [`diffrule`](@ref), so rules defined in other
+packages are included. Rules for a package's functions exist only once that package is
+loaded: querying before `using SpecialFunctions` will not list its rules.
 
 !!! note
     Calling `diffrules()` with the implicit default keyword argument `filter_modules`
@@ -145,55 +162,49 @@ true
 julia> (:Base, :log, 1) in DiffRules.diffrules()
 true
 
-julia> (:Base, :*, 2) in DiffRules.diffrules()
-true
-```
-
-If you call `diffrules()`, only rules for Base, SpecialFunctions, and
-NaNMath are returned but no rules for LogExpFunctions:
-```jldoctest
-julia> any(M === :LogExpFunctions for (M, _, _) in DiffRules.diffrules())
-false
-```
-
-If you set `filter_modules=nothing`, all rules defined in DiffRules are
-returned and in particular also rules for LogExpFunctions:
-```jldoctest
-julia> any(
-           M === :LogExpFunctions
-           for (M, _, _) in DiffRules.diffrules(; filter_modules=nothing)
-       )
-true
-```
-
-If you set `filter_modules=(:Base,)` only rules for functions in Base are
-returned:
-```jldoctest
 julia> all(M === :Base for (M, _, _) in DiffRules.diffrules(; filter_modules=(:Base,)))
 true
 ```
 """
 function diffrules(; filter_modules=DefaultFilterModules())
     modules = deprecated_modules(filter_modules)
-    return if modules === nothing
-        keys(DEFINED_DIFFRULES)
-    else
-        Iterators.filter(keys(DEFINED_DIFFRULES)) do (M, _, _)
-            return M in modules
-        end
+    rules = [(_pkgname(fn), nameof(fn), arity) for (fn, arity) in _rules()]
+    modules === nothing && return rules
+    return filter(r -> r[1] in modules, rules)
+end
+
+# `parentmodule` reports submodules such as `Base.Math`, which callers cannot splice into
+# `M.f`; the root module is the package name they expect.
+_pkgname(fn) = nameof(Base.moduleroot(parentmodule(fn)))
+
+# Rules are the methods of `diffrule` whose first parameter is a singleton function type.
+# The `Symbol`/`Module` methods above are not, and are skipped.
+function _rule(m::Method)
+    m.isva && return nothing
+    params = Base.unwrap_unionall(m.sig).parameters
+    length(params) >= 2 || return nothing
+    T = params[2]
+    T isa DataType && T <: Function && isdefined(T, :instance) || return nothing
+    return (T.instance, length(params) - 2)
+end
+
+function _rules()
+    rules = Tuple{Function,Int}[]
+    for m in methods(diffrule)
+        rule = _rule(m)
+        rule === nothing || push!(rules, rule)
     end
+    return rules
 end
 
-# For v0.6 and v0.7 compatibility, need to support having the diff rule function enter as a
-# `Expr(:quote...)` and a `QuoteNode`. When v0.6 support is dropped, the function will
-# always enter in a `QuoteNode` (#23885).
-function _get_quoted_symbol(ex::Expr)
-    @assert ex.head == :quote
-    @assert length(ex.args) == 1 && isa(ex.args[1], Symbol) "Function not a single symbol"
-    ex.args[1]
-end
-
-function _get_quoted_symbol(ex::QuoteNode)
-    @assert isa(ex.value, Symbol) "Function not a single symbol"
-    ex.value
+# Downstream packages resolve every rule by name while precompiling, so scan the method table
+# directly instead of building the full list first.
+function _resolve(M::Symbol, f::Symbol)
+    for m in methods(diffrule)
+        rule = _rule(m)
+        rule === nothing && continue
+        fn = rule[1]
+        nameof(fn) === f && _pkgname(fn) === M && return fn
+    end
+    return nothing
 end
