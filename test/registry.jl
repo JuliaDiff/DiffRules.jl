@@ -1,9 +1,8 @@
-include("baseline.jl")
-
 @testset "registry" begin
     @testset "baseline" begin
-        rules = sort!(collect(DiffRules.diffrules(; filter_modules=nothing));
-                      by = r -> (string(r[1]), string(r[2]), r[3]))
+        rules = DiffRules.diffrules(; filter_modules=nothing)
+        @test allunique(rules)
+        sort!(rules; by = r -> (string(r[1]), string(r[2]), r[3]))
         @test rules == BASELINE
         @testset "$M.$f/$n" for (M, f, n) in BASELINE
             @test DiffRules.hasdiffrule(M, f, n)
@@ -29,6 +28,8 @@ include("baseline.jl")
 
     @testset "lookup by module" begin
         @test DiffRules.diffrule(Base, :sin, :x) == :(cos(x))
+        @test DiffRules.diffrule(SpecialFunctions, :digamma, :x) ==
+              :($(SpecialFunctions.trigamma)(x))
         @test DiffRules.hasdiffrule(Base, :sin, 1)
         @test !DiffRules.hasdiffrule(Base, :sin, 2)
     end
@@ -44,7 +45,11 @@ include("baseline.jl")
     @testset "unknown rules" begin
         @test !DiffRules.hasdiffrule(:Base, :nonexistent, 1)
         @test !DiffRules.hasdiffrule(:NotLoaded, :f, 1)
-        @test_throws Exception DiffRules.diffrule(:Base, :nonexistent, :x)
+        @test !DiffRules.hasdiffrule(Base, :nonexistent, 1)
+        @test !DiffRules.hasdiffrule(:Base, :sum, 1)
+        @test_throws KeyError DiffRules.diffrule(:Base, :nonexistent, :x)
+        @test_throws KeyError DiffRules.diffrule(Base, :nonexistent, :x)
+        @test_throws MethodError DiffRules.diffrule(Base.sin, :x, :y)
     end
 
     @testset "filter_modules" begin
