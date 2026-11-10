@@ -186,6 +186,60 @@ for xytype in [:Float32, :Float64, :BigFloat]
     end
 end
 
+# Rules must not suffer from catastrophic cancellation, e.g., `1 - x^2` near `|x| = 1` or
+# `1 - tanh(x)^2` for large `|x|` (#102): compare with the rule evaluated in high precision
+below_one(T) = (1 - 4 * eps(T), -(1 - 64 * eps(T)))   # 1 ± x for |x| < 1 near 1
+above_one(T) = (1 + 4 * eps(T), -(1 + 64 * eps(T)))   # x ± 1 for |x| > 1 near 1
+acosh_xs(T) = (abs.(above_one(T))..., 2 * sqrt(floatmax(T)))  # x^2 overflows for the last
+@testset "accuracy: ($M, $f)" for (M, f, xs) in [
+    (:Base, :asin, below_one),
+    (:Base, :acos, below_one),
+    (:Base, :asind, below_one),
+    (:Base, :acosd, below_one),
+    (:Base, :atanh, below_one),
+    (:Base, :asech, T -> abs.(below_one(T))),
+    (:Base, :acoth, above_one),
+    (:Base, :acosh, acosh_xs),
+    (:Base, :asec, above_one),
+    (:Base, :acsc, above_one),
+    (:Base, :asecd, above_one),
+    (:Base, :acscd, above_one),
+    (:Base, :tanh, T -> T.((0.5, -5, 10, -20, 30, 300))),
+    (:NaNMath, :asin, below_one),
+    (:NaNMath, :acos, below_one),
+    (:NaNMath, :atanh, below_one),
+    (:NaNMath, :acosh, acosh_xs),
+    (:LogExpFunctions, :logistic, T -> T.((-40, 40))),
+    (:LogExpFunctions, :log1psq, T -> (-2 * sqrt(floatmax(T)), 2 * sqrt(floatmax(T)))),
+    (:LogExpFunctions, :log1mexp, T -> T.((-2e-30, -1e-12))),
+    (:LogExpFunctions, :logexpm1, T -> T.((2e-30, 6.039463507942533e-8))),
+]
+    deriv = DiffRules.diffrule(M, f, :x)
+    @eval let
+        for T in (Float32, Float64), x in $xs(T)
+            # `x` is exact in `BigFloat`, so this is the derivative at `x` up to ~1e-70
+            expected = setprecision(BigFloat, 256) do
+                let x = big(x)
+                    T($deriv)
+                end
+            end
+            @test $deriv isa T
+            @test $deriv ≈ expected rtol = 8 * eps(T)
+        end
+    end
+end
+
+# Test `Inf` arguments of `log1mexp` and `logexpm1`
+for (f, x, dx) in ((:log1mexp, -Inf, -0.0), (:logexpm1, Inf, 1.0))
+    deriv = DiffRules.diffrule(:LogExpFunctions, f, :x)
+    @eval begin
+        let
+            x = $x
+            @test $deriv === $dx
+        end
+    end
+end
+
 # Test `Inf` and `NaN` arguments of `logaddexp` (JuliaStats/LogExpFunctions.jl#61)
 derivs = DiffRules.diffrule(:LogExpFunctions, :logaddexp, :x, :y)
 for xytype in [:Float32, :Float64]
@@ -268,43 +322,6 @@ end
             d = big(x) - big(y)
             @test dx ≈ -inv(expm1(-d)) rtol=4*eps()
             @test dy ≈ -inv(expm1(d)) rtol=4*eps()
-        end
-    end
-end
-
-# Test accuracy of `logistic` for arguments of large magnitude
-deriv = DiffRules.diffrule(:LogExpFunctions, :logistic, :x)
-@eval begin
-    let
-        for x in (-40.0, 40.0, -30f0, 30f0)
-            e = exp(-abs(big(x)))
-            @test $deriv ≈ e / (1 + e)^2 rtol=4*eps(typeof(x))
-        end
-    end
-end
-
-# Test `log1psq` for arguments of large magnitude
-deriv = DiffRules.diffrule(:LogExpFunctions, :log1psq, :x)
-@eval begin
-    let
-        for x in (-1e200, 1e200)
-            @test $deriv ≈ 2 / x rtol=4*eps()
-        end
-    end
-end
-
-# Test `log1mexp` and `logexpm1` for arguments of small magnitude and `Inf` arguments
-for (f, x, xinf, dxinf) in (
-    (:log1mexp, -1e-12, -Inf, -0.0), (:logexpm1, 6.039463507942533e-8, Inf, 1.0),
-)
-    deriv = DiffRules.diffrule(:LogExpFunctions, f, :x)
-    @eval begin
-        let
-            x = $x
-            @test $deriv ≈ -inv(expm1(-big(x))) rtol=4*eps()
-
-            x = $xinf
-            @test $deriv === $dxinf
         end
     end
 end
