@@ -186,6 +186,44 @@ for xytype in [:Float32, :Float64, :BigFloat]
     end
 end
 
+# Rules must not suffer from catastrophic cancellation, e.g., `1 - x^2` near `|x| = 1` or
+# `1 - tanh(x)^2` for large `|x|` (#102): compare with the rule evaluated in high precision
+below_one(T) = (1 - 4 * eps(T), -(1 - 64 * eps(T)))   # 1 ± x for |x| < 1 near 1
+above_one(T) = (1 + 4 * eps(T), -(1 + 64 * eps(T)))   # x ± 1 for |x| > 1 near 1
+@testset "accuracy: ($M, $f)" for (M, f, xs) in [
+    (:Base, :asin, below_one),
+    (:Base, :acos, below_one),
+    (:Base, :asind, below_one),
+    (:Base, :acosd, below_one),
+    (:Base, :atanh, below_one),
+    (:Base, :asech, T -> abs.(below_one(T))),
+    (:Base, :acoth, above_one),
+    (:Base, :acosh, T -> abs.(above_one(T))),
+    (:Base, :asec, above_one),
+    (:Base, :acsc, above_one),
+    (:Base, :asecd, above_one),
+    (:Base, :acscd, above_one),
+    (:Base, :tanh, T -> T.((0.5, -5, 10, -20, 30, 300))),
+    (:NaNMath, :asin, below_one),
+    (:NaNMath, :acos, below_one),
+    (:NaNMath, :atanh, below_one),
+    (:NaNMath, :acosh, T -> abs.(above_one(T))),
+]
+    deriv = DiffRules.diffrule(M, f, :x)
+    @eval let
+        for T in (Float32, Float64), x in $xs(T)
+            # `x` is exact in `BigFloat`, so this is the derivative at `x` up to ~1e-70
+            expected = setprecision(BigFloat, 256) do
+                let x = big(x)
+                    T($deriv)
+                end
+            end
+            @test $deriv isa T
+            @test $deriv ≈ expected rtol = 8 * eps(T)
+        end
+    end
+end
+
 end
 
     @testset "diffrules" begin
