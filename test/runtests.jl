@@ -32,6 +32,9 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                         rand($T) + $T(0.5)
                     elseif $(f === :log1mexp)
                         rand($T) - one($T)
+                    elseif $(f in (:logitexp, :logit1mexp))
+                        # avoid singularities with finite differencing
+                        rand($T) - $T(1.5)
                     elseif $(f in (:log2mexp, :erfinv))
                         rand($T) - $T(0.5)
                     else
@@ -179,6 +182,129 @@ for xytype in [:Float32, :Float64, :BigFloat]
             y = -one($xytype)
             dx, dy = $(derivs[1]), $(derivs[2])
             @test iszero(dy)
+        end
+    end
+end
+
+# Test `Inf` and `NaN` arguments of `logaddexp` (JuliaStats/LogExpFunctions.jl#61)
+derivs = DiffRules.diffrule(:LogExpFunctions, :logaddexp, :x, :y)
+for xytype in [:Float32, :Float64]
+    @eval begin
+        let
+            x = y = $xytype(-Inf)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test dx === dy === $xytype(0.5)
+
+            x = y = $xytype(Inf)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test dx === dy === $xytype(0.5)
+
+            x, y = $xytype(Inf), one($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test dx === one($xytype)
+            @test dy === zero($xytype)
+
+            x, y = $xytype(-Inf), one($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test dx === zero($xytype)
+            @test dy === one($xytype)
+
+            x, y = $xytype(NaN), one($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test isnan(dx)
+            @test isnan(dy)
+        end
+    end
+end
+
+# Test accuracy of `logaddexp` for arguments of large magnitude
+@eval begin
+    let
+        x, y = 300.0, 301.0
+        dx, dy = $(derivs[1]), $(derivs[2])
+        @test dx ≈ LogExpFunctions.logistic(big(x) - big(y)) rtol=4*eps()
+        @test dy ≈ LogExpFunctions.logistic(big(y) - big(x)) rtol=4*eps()
+    end
+end
+
+# Test equal and infinite arguments of `logsubexp`
+derivs = DiffRules.diffrule(:LogExpFunctions, :logsubexp, :x, :y)
+for xytype in [:Float32, :Float64]
+    @eval begin
+        let
+            x = y = one($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test dx === $xytype(Inf)
+            @test dy === $xytype(-Inf)
+
+            x = y = $xytype(-Inf)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test dx === $xytype(Inf)
+            @test dy === $xytype(-Inf)
+
+            x = y = $xytype(Inf)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test isnan(dx)
+            @test isnan(dy)
+
+            x, y = $xytype(Inf), one($xytype)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test dx === one($xytype)
+            @test dy === -zero($xytype)
+
+            x, y = one($xytype), $xytype(Inf)
+            dx, dy = $(derivs[1]), $(derivs[2])
+            @test dx === -zero($xytype)
+            @test dy === one($xytype)
+        end
+    end
+end
+
+# Test accuracy of `logsubexp` for nearly equal arguments
+@eval begin
+    let
+        for (x, y) in ((1.0, 1.0 + 1e-6), (1.0 + 1e-6, 1.0))
+            dx, dy = $(derivs[1]), $(derivs[2])
+            d = big(x) - big(y)
+            @test dx ≈ -inv(expm1(-d)) rtol=4*eps()
+            @test dy ≈ -inv(expm1(d)) rtol=4*eps()
+        end
+    end
+end
+
+# Test accuracy of `logistic` for arguments of large magnitude
+deriv = DiffRules.diffrule(:LogExpFunctions, :logistic, :x)
+@eval begin
+    let
+        for x in (-40.0, 40.0, -30f0, 30f0)
+            e = exp(-abs(big(x)))
+            @test $deriv ≈ e / (1 + e)^2 rtol=4*eps(typeof(x))
+        end
+    end
+end
+
+# Test `log1psq` for arguments of large magnitude
+deriv = DiffRules.diffrule(:LogExpFunctions, :log1psq, :x)
+@eval begin
+    let
+        for x in (-1e200, 1e200)
+            @test $deriv ≈ 2 / x rtol=4*eps()
+        end
+    end
+end
+
+# Test `log1mexp` and `logexpm1` for arguments of small magnitude and `Inf` arguments
+for (f, x, xinf, dxinf) in (
+    (:log1mexp, -1e-12, -Inf, -0.0), (:logexpm1, 6.039463507942533e-8, Inf, 1.0),
+)
+    deriv = DiffRules.diffrule(:LogExpFunctions, f, :x)
+    @eval begin
+        let
+            x = $x
+            @test $deriv ≈ -inv(expm1(-big(x))) rtol=4*eps()
+
+            x = $xinf
+            @test $deriv === $dxinf
         end
     end
 end

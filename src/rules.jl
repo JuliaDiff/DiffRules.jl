@@ -291,28 +291,37 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 
 # unary
 @define_diffrule LogExpFunctions.xlogx(x) = :(1 + log($x))
-@define_diffrule LogExpFunctions.logistic(x) = :(z = LogExpFunctions.logistic($x); z * (1 - z))
+# logistic(x) * logistic(-x), avoiding cancellation in `1 - logistic(x)`
+@define_diffrule LogExpFunctions.logistic(x) = :(let e = exp(-abs($x)); e / (1 + e)^2 end)
 @define_diffrule LogExpFunctions.logit(x) = :(inv($x * (1 - $x)))
-@define_diffrule LogExpFunctions.log1psq(x) = :(2 * $x / (1 + $x^2))
+# avoid overflow of `x^2`
+@define_diffrule LogExpFunctions.log1psq(x) = :(abs($x) < 1 ? 2 * $x / (1 + $x^2) : 2 / ($x + inv($x)))
 @define_diffrule LogExpFunctions.log1pexp(x) = :(LogExpFunctions.logistic($x))
-@define_diffrule LogExpFunctions.log1mexp(x) = :(-exp($x - LogExpFunctions.log1mexp($x)))
+@define_diffrule LogExpFunctions.log1mexp(x) = :(-inv(expm1(-$x)))
 @define_diffrule LogExpFunctions.log2mexp(x) = :(-exp($x - LogExpFunctions.log2mexp($x)))
-@define_diffrule LogExpFunctions.logexpm1(x) = :(exp($x - LogExpFunctions.logexpm1($x)))
+@define_diffrule LogExpFunctions.logexpm1(x) = :(-inv(expm1(-$x)))
 @define_diffrule LogExpFunctions.log1pmx(x) = :(-$x / (1 + $x))
 @define_diffrule LogExpFunctions.logmxp1(x) = :((1 - $x) / $x)
 @define_diffrule LogExpFunctions.logcosh(x) = :(tanh($x))
 @define_diffrule LogExpFunctions.logabssinh(x) = :(coth($x))
 @define_diffrule LogExpFunctions.logabstanh(x) = :(2 / sinh(2 * $x))
+@define_diffrule LogExpFunctions.loglogistic(x) = :(LogExpFunctions.logistic(-$x))
+@define_diffrule LogExpFunctions.log1mlogistic(x) = :(-LogExpFunctions.logistic($x))
+@define_diffrule LogExpFunctions.logitexp(x) = :(-inv(expm1($x)))
+@define_diffrule LogExpFunctions.logit1mexp(x) = :(inv(expm1($x)))
 
 # binary
 @define_diffrule LogExpFunctions.xlogy(x, y) =
     :(log($y)),
     :(z = $x / $y; iszero($x) && !isnan($y) ? zero(z) : z)
+# `x - y` is `NaN` if `x == y == ±Inf`
 @define_diffrule LogExpFunctions.logaddexp(x, y) =
-    :(exp($x - LogExpFunctions.logaddexp($x, $y))), :(exp($y - LogExpFunctions.logaddexp($x, $y)))
+    :(LogExpFunctions.logistic($x == $y && isinf($x) ? zero($x - $y) : $x - $y)),
+    :(LogExpFunctions.logistic($x == $y && isinf($x) ? zero($x - $y) : $y - $x))
+# `x - y` is `NaN` if `x == y == -Inf`
 @define_diffrule LogExpFunctions.logsubexp(x, y) =
-    :(z = LogExpFunctions.logsubexp($x, $y); $x > $y ? exp($x - z) : -exp($x - z)),
-    :(z = LogExpFunctions.logsubexp($x, $y); $x > $y ? -exp($y - z) : exp($y - z))
+    :(-inv(expm1(-($x == $y == -Inf ? zero($x - $y) : $x - $y)))),
+    :(-inv(expm1($x == $y == -Inf ? zero($x - $y) : $x - $y)))
 @define_diffrule LogExpFunctions.xlog1py(x, y) =
     :(log1p($y)),
     :(z = $x / (1 + $y); iszero($x) && !isnan($y) ? zero(z) : z)
