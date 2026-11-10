@@ -40,10 +40,7 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                     # We're happy with types with the correct promotion behavior, e.g.
                     # it's fine to return `1` as a derivative despite input being `Float64`.
                     @test promote_type(typeof($deriv), $T) === $T
-                    # In older versions of LogExpFunctions `log1pmx(::Float32)` and `logmxp1(::Float32)` are not defined
-                    if hasmethod($M.$f, Tuple{$T})
-                        @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-2 atol=1e-3     
-                    end
+                    @test $deriv ≈ finitediff($M.$f, goo) rtol=1e-2 atol=1e-3
                     # test for 2pi functions
                     if $(f === :mod2pi)
                         goo = 4 * pi
