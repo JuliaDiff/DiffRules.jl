@@ -190,6 +190,7 @@ end
 # `1 - tanh(x)^2` for large `|x|` (#102): compare with the rule evaluated in high precision
 below_one(T) = (1 - 4 * eps(T), -(1 - 64 * eps(T)))   # 1 ± x for |x| < 1 near 1
 above_one(T) = (1 + 4 * eps(T), -(1 + 64 * eps(T)))   # x ± 1 for |x| > 1 near 1
+acosh_xs(T) = (abs.(above_one(T))..., 2 * sqrt(floatmax(T)))  # x^2 overflows for the last
 @testset "accuracy: ($M, $f)" for (M, f, xs) in [
     (:Base, :asin, below_one),
     (:Base, :acos, below_one),
@@ -198,7 +199,7 @@ above_one(T) = (1 + 4 * eps(T), -(1 + 64 * eps(T)))   # x ± 1 for |x| > 1 near 
     (:Base, :atanh, below_one),
     (:Base, :asech, T -> abs.(below_one(T))),
     (:Base, :acoth, above_one),
-    (:Base, :acosh, T -> abs.(above_one(T))),
+    (:Base, :acosh, acosh_xs),
     (:Base, :asec, above_one),
     (:Base, :acsc, above_one),
     (:Base, :asecd, above_one),
@@ -207,7 +208,7 @@ above_one(T) = (1 + 4 * eps(T), -(1 + 64 * eps(T)))   # x ± 1 for |x| > 1 near 
     (:NaNMath, :asin, below_one),
     (:NaNMath, :acos, below_one),
     (:NaNMath, :atanh, below_one),
-    (:NaNMath, :acosh, T -> abs.(above_one(T))),
+    (:NaNMath, :acosh, acosh_xs),
 ]
     deriv = DiffRules.diffrule(M, f, :x)
     @eval let
