@@ -96,6 +96,8 @@ _abs_deriv(x) = signbit(x) ? -one(x) : one(x)
 # trinary #
 #---------#
 
+@define_diffrule Base.hypot(x, y, z) = :( $x / hypot($x, $y, $z) ), :( $y / hypot($x, $y, $z) ), :( $z / hypot($x, $y, $z) )
+
 #=
 
 @define_diffrule Base.muladd(x, y, z) = :($y), :($x), :(one($z))
