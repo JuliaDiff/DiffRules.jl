@@ -95,19 +95,19 @@ non_diffeable_arg_functions = [(:Base, :rem2pi, 2), (:Base, :ldexp, 2), (:Base, 
                     foo, bar, goo = rand($T), rand($T), rand($T)
                     dx, dy, dz = $(derivs[1]), $(derivs[2]), $(derivs[3])
                     if !(isnan(dx))
-                        @test dx ≈ finitediff(z -> $M.$f(z, bar, goo), foo) rtol=1e-2 atol=1e-3
+                        @test dx ≈ finitediff(z -> $M.$f(z, bar, goo), foo) rtol=1e-2
 
                         # Check type, if applicable.
                         @test promote_type(typeof(real(dx)), $T) === $T
                     end
                     if !(isnan(dy))
-                        @test dy ≈ finitediff(z -> $M.$f(foo, z, goo), bar) rtol=1e-2 atol=1e-3
+                        @test dy ≈ finitediff(z -> $M.$f(foo, z, goo), bar) rtol=1e-2
 
                         # Check type, if applicable.
                         @test promote_type(typeof(real(dy)), $T) === $T
                     end
                     if !(isnan(dz))
-                        @test dz ≈ finitediff(z -> $M.$f(foo, bar, z), goo) rtol=1e-2 atol=1e-3
+                        @test dz ≈ finitediff(z -> $M.$f(foo, bar, z), goo) rtol=1e-2
 
                         # Check type, if applicable.
                         @test promote_type(typeof(real(dz)), $T) === $T
@@ -347,7 +347,6 @@ end
         rules = DiffRules.diffrules(; filter_modules=(:Base, :LogExpFunctions))
         @test Set(M for (M, _, _) in rules) == Set((:Base, :LogExpFunctions))
     end
-
 end
 
 # Test ifelse separately as first argument is boolean
